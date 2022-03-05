@@ -1,0 +1,14 @@
+.idea
+.vs
+.vscode
+.clang
+.clangd
+.cache
+
+cmake-build-debug*
+cmake-build-release*
+build
+out
+
+compile_commands.json
+CMakeSettings.json
