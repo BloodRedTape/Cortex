@@ -5,9 +5,13 @@
 #include "commit.hpp"
 #include "filesystem.hpp"
 
-struct Repository {
-	std::vector<Commit> Commits;
-	std::string RepositoryPath;
+class Repository {
+private:
+	std::vector<Commit> m_Commits;
+	std::string m_RepositoryPath;
+	DirWatcherRef m_DirWatcher;
+public:
+	Repository(std::string path);
 
 	void OnDirChanged(FileAction action);
 

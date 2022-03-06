@@ -4,4 +4,8 @@ project(Cortex)
 
 add_executable(Cortex 
 	"cortex.cpp"
- "commit.hpp" "repository.hpp"  "commit.cpp" "utils.hpp" "filesystem.hpp"  "repository.cpp")
+	"commit.cpp" 
+	"repository.cpp"
+	"filesystem.cpp"
+	"win32_filesystem.cpp"
+)

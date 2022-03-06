@@ -1,26 +1,31 @@
 #include "repository.hpp"
 #include <iostream>
 
+Repository::Repository(std::string path):
+	m_RepositoryPath(std::move(path)),
+	m_DirWatcher(DirWatcher::Create(m_RepositoryPath.c_str(), std::bind(&Repository::OnDirChanged, this, std::placeholders::_1)))
+{}
+
 void Repository::OnDirChanged(FileAction action) {
 	Commit commit{
 		action,
 		HashLastCommit()
 	};
 
-	Commits.push_back(commit);
-
 	std::cout << "NewCommit : " << commit.Previous << std::endl;
 	std::cout << "\tActionType:   " << FileActionTypeString(commit.Action.Type) << std::endl;
 	std::cout << "\tRelativePath: " << commit.Action.RelativeFilepath << std::endl;
 	std::cout << "\tUnixTime:     " << commit.Action.Time.Seconds << std::endl;
+
+	m_Commits.push_back(commit);
 }
 
 Hash Repository::HashLastCommit()
 {
-	if (!Commits.size()) 
+	if (!m_Commits.size()) 
 		return Hash();
 
-	const Commit &last = Commits.back();
+	const Commit &last = m_Commits.back();
 
 	return Hash(last);
 }
