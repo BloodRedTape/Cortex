@@ -68,6 +68,14 @@ struct DirState: std::vector<FileState> {
 	friend std::istream &operator>>(std::istream &stream, DirState &state);
 
 	friend std::vector<FileAction> operator-(const DirState &left, const DirState &right);
+
+	const FileState* Find(const FileState& other) const{
+		for(const FileState &state: *this){
+			if(state.RelativeFilepath == other.RelativeFilepath)
+				return &state;
+		}
+		return nullptr;
+	}
 };
 
 #endif //CORTEX_FILESYSTEM_HPP

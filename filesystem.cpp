@@ -1,5 +1,4 @@
 #include "filesystem.hpp"
-#include <algorithm>
 
 std::ostream& operator<<(std::ostream& stream, const DirState& state) {
 	for (const auto& file_state : state)
@@ -25,11 +24,9 @@ std::vector<FileAction> operator-(const DirState& nnew, const DirState& old) {
 	std::vector<FileAction> result;
 
 	for (const FileState& old_file : old) {
-		auto it = std::find(nnew.begin(), nnew.end(), [old_file](const FileState &state){
-			return state.RelativeFilepath == old_file.RelativeFilepath;
-		});
+		const FileState *it = nnew.Find(old_file);
 
-		const bool found = it != nnew.end();
+		const bool found = it != nullptr;
 
 		if (!found) {
 			result.emplace_back(FileActionType::Delete, UnixTime(), old_file.RelativeFilepath);
@@ -43,11 +40,9 @@ std::vector<FileAction> operator-(const DirState& nnew, const DirState& old) {
 	}
 
 	for (const FileState& new_file : nnew) {
-		auto it = std::find(old.begin(), old.end(), [new_file](const FileState &state){
-			return state.RelativeFilepath == new_file.RelativeFilepath;
-		});
+		const FileState *it = old.Find(new_file);
 
-		const bool found = it != old.end();
+		const bool found = it != nullptr;
 
 		if (!found) {
 			result.emplace_back(FileActionType::Create, new_file.ModificationTime, new_file.RelativeFilepath);
