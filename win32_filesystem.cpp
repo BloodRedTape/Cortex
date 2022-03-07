@@ -91,26 +91,41 @@ struct DirIt {
 
 class Win32DirWatcher: public DirWatcher{
 private:
-	OnDirChangedCallback m_Callback;
-	bool m_IsBlocking;
 	std::string m_DirPath;
+	OnDirChangedCallback m_Callback;
+	DirState m_LastState;
+	bool m_IsBlocking;
 public:
-	Win32DirWatcher(std::string dir_path, OnDirChangedCallback callback, bool is_blocking):
+	Win32DirWatcher(std::string dir_path, OnDirChangedCallback callback, DirState initial_state, bool is_blocking):
+		m_DirPath(std::move(dir_path)),
 		m_Callback(callback),
-		m_IsBlocking(is_blocking),
-		m_DirPath(std::move(dir_path))
+		m_LastState(std::move(initial_state)),
+		m_IsBlocking(is_blocking)
 	{
+#if 0
 		auto dir_state = GetDirState();
 		
 		for (const FileState& file : dir_state) {
 			std::cout << file.RelativeFilepath << std::endl;
 			std::cout << '\t' << file.ModificationTime.Seconds << std::endl;
 		}
-
+#endif
 	}
 
 	bool DispatchChanges()override{
-		return false;
+		DirState current_state = GetDirState();
+
+		DirStateDiff diff = current_state.GetDiffFrom(m_LastState);
+
+		if (!diff.size()) 
+			return false;
+
+		for (const FileAction& action : diff) 
+			m_Callback(action);
+
+		m_LastState = std::move(current_state);
+
+		return true;
 	}
 
 	DirState GetDirState()override {
@@ -134,6 +149,6 @@ public:
 	}
 };
 
-DirWatcherRef DirWatcher::Create(std::string dir_path, OnDirChangedCallback callback, bool is_blocking) {
-	return std::make_unique<Win32DirWatcher>(std::move(dir_path), callback, is_blocking);
+DirWatcherRef DirWatcher::Create(std::string dir_path, OnDirChangedCallback callback, DirState initial_state, bool is_blocking) {
+	return std::make_unique<Win32DirWatcher>(std::move(dir_path), callback, std::move(initial_state), is_blocking);
 }

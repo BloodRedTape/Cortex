@@ -46,14 +46,24 @@ struct FileAction : FileState{
 	{}
 };
 
+using DirStateDiff = std::vector<FileAction>;
+
 struct DirState: std::vector<FileState> {
+	DirState() = default;
+
+	DirState(DirState &&) = default;
+
+	DirState &operator=(DirState &&) = default;
+
+	~DirState() = default;
+
+	DirStateDiff GetDiffFrom(const DirState &old);
+
+	const FileState* Find(const FileState& other)const;
+
 	friend std::ostream &operator<<(std::ostream &stream, const DirState &state);
 
 	friend std::istream &operator>>(std::istream &stream, DirState &state);
-
-	std::vector<FileAction> GetDiffFrom(const DirState &old);
-
-	const FileState* Find(const FileState& other)const;
 };
 
 using DirWatcherRef = std::unique_ptr<class DirWatcher>;
@@ -68,7 +78,7 @@ public:
 
 	virtual DirState GetDirState() = 0;
 	
-	static DirWatcherRef Create(std::string dir_path, OnDirChangedCallback callback, bool is_blocking = true);
+	static DirWatcherRef Create(std::string dir_path, OnDirChangedCallback callback, DirState initial_state = {}, bool is_blocking = true);
 };
 
 #endif //CORTEX_FILESYSTEM_HPP

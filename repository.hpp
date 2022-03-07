@@ -16,6 +16,8 @@ public:
 	void OnDirChanged(FileAction action);
 
 	Hash HashLastCommit();
+
+	void Run();
 };
 
 #endif//CORTEX_REPOSITORY_HPP

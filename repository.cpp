@@ -1,5 +1,7 @@
 #include "repository.hpp"
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 Repository::Repository(std::string path):
 	m_RepositoryPath(std::move(path)),
@@ -28,4 +30,11 @@ Hash Repository::HashLastCommit()
 	const Commit &last = m_Commits.back();
 
 	return Hash(last);
+}
+
+void Repository::Run() {
+	while (true) {
+		m_DirWatcher->DispatchChanges();
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
 }

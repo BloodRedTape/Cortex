@@ -16,15 +16,15 @@ std::istream& operator>>(std::istream& stream, DirState& state) {
 	return stream;
 }
 
-std::vector<FileAction> DirState::GetDiffFrom(const DirState& old) {
-	std::vector<FileAction> result;
+DirStateDiff DirState::GetDiffFrom(const DirState& old) {
+	DirStateDiff result;
 
 	for (const FileState& old_file : old) {
 		const FileState *it = this->Find(old_file);
 
 		const bool found = it != nullptr;
 
-		if (!found) {
+		if (!found) { // We should check for deletion first to avoid strange order bugs
 			result.emplace_back(FileActionType::Delete, UnixTime(), old_file.RelativeFilepath);
 			continue;
 		}

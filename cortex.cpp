@@ -11,5 +11,6 @@ int main()
 	repo.OnDirChanged({FileActionType::Update, {}, "file1.txt"});
 	repo.OnDirChanged({FileActionType::Delete, {}, "file2.txt"});
 #endif
+	repo.Run();
 	return 0;
 }
