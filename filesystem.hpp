@@ -68,7 +68,7 @@ public:
 
 	virtual DirState GetDirState() = 0;
 	
-	static DirWatcherRef Create(const char *dir_path, OnDirChangedCallback callback, bool is_blocking = true);
+	static DirWatcherRef Create(std::string dir_path, OnDirChangedCallback callback, bool is_blocking = true);
 };
 
 #endif //CORTEX_FILESYSTEM_HPP

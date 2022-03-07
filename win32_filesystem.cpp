@@ -95,10 +95,10 @@ private:
 	bool m_IsBlocking;
 	std::string m_DirPath;
 public:
-	Win32DirWatcher(const char *dir_path, OnDirChangedCallback callback, bool is_blocking):
+	Win32DirWatcher(std::string dir_path, OnDirChangedCallback callback, bool is_blocking):
 		m_Callback(callback),
 		m_IsBlocking(is_blocking),
-		m_DirPath(dir_path)
+		m_DirPath(std::move(dir_path))
 	{
 		auto dir_state = GetDirState();
 		
@@ -134,6 +134,6 @@ public:
 	}
 };
 
-DirWatcherRef DirWatcher::Create(const char* dir_path, OnDirChangedCallback callback, bool is_blocking) {
-	return std::make_unique<Win32DirWatcher>(dir_path, callback, is_blocking);
+DirWatcherRef DirWatcher::Create(std::string dir_path, OnDirChangedCallback callback, bool is_blocking) {
+	return std::make_unique<Win32DirWatcher>(std::move(dir_path), callback, is_blocking);
 }
