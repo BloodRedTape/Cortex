@@ -27,16 +27,33 @@ inline const char* FileActionTypeString(FileActionType type) {
 	return "Shit happens";
 }
 
-struct FileAction {
-	FileActionType Type;
-	UnixTime    Time;
+struct FileState {
 	std::string RelativeFilepath;
+	UnixTime ModificationTime;
+
+	FileState(std::string rel_path, UnixTime time):
+		RelativeFilepath(std::move(rel_path)),
+		ModificationTime(time)
+	{}
+};
+
+struct FileAction : FileState{
+	FileActionType Type;
 
 	FileAction(FileActionType type, UnixTime time, std::string relative_filepath):
-		Type(type),
-		Time(time),
-		RelativeFilepath(std::move(relative_filepath))
+		FileState(std::move(relative_filepath), time),
+		Type(type)
 	{}
+};
+
+struct DirState: std::vector<FileState> {
+	friend std::ostream &operator<<(std::ostream &stream, const DirState &state);
+
+	friend std::istream &operator>>(std::istream &stream, DirState &state);
+
+	std::vector<FileAction> GetDiffFrom(const DirState &old);
+
+	const FileState* Find(const FileState& other)const;
 };
 
 using DirWatcherRef = std::unique_ptr<class DirWatcher>;
@@ -48,34 +65,10 @@ public:
 	virtual ~DirWatcher() = default;
 
 	virtual bool DispatchChanges() = 0;
+
+	virtual DirState GetDirState() = 0;
 	
 	static DirWatcherRef Create(const char *dir_path, OnDirChangedCallback callback, bool is_blocking = true);
-};
-
-struct FileState {
-	std::string RelativeFilepath;
-	UnixTime ModificationTime;
-
-	FileState(std::string rel_path, UnixTime time):
-		RelativeFilepath(std::move(rel_path)),
-		ModificationTime(time)
-	{}
-};
-
-struct DirState: std::vector<FileState> {
-	friend std::ostream &operator<<(std::ostream &stream, const DirState &state);
-
-	friend std::istream &operator>>(std::istream &stream, DirState &state);
-
-	friend std::vector<FileAction> operator-(const DirState &left, const DirState &right);
-
-	const FileState* Find(const FileState& other) const{
-		for(const FileState &state: *this){
-			if(state.RelativeFilepath == other.RelativeFilepath)
-				return &state;
-		}
-		return nullptr;
-	}
 };
 
 #endif //CORTEX_FILESYSTEM_HPP

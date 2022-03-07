@@ -89,32 +89,18 @@ struct DirIt {
 	}
 };
 
-DirState QueryDirState(std::string dir_path, std::string local_dir_path = "") {
-	DirState state;
-
-	for (DirIt it(dir_path); it; ++it) {
-		if(it.IsFile())
-			state.emplace_back(local_dir_path + it.Name(), it.ModifiedTime());
-		if (it.IsRegularDir()) {
-			auto sub_state = QueryDirState(dir_path + it.Name() + "\\", local_dir_path + it.Name() + "\\");
-			state.reserve(state.size() + sub_state.size());
-			std::move(std::begin(sub_state), std::end(sub_state), std::back_inserter(state));
-		}
-	}
-
-	return state;
-}
-
 class Win32DirWatcher: public DirWatcher{
 private:
 	OnDirChangedCallback m_Callback;
 	bool m_IsBlocking;
+	std::string m_DirPath;
 public:
 	Win32DirWatcher(const char *dir_path, OnDirChangedCallback callback, bool is_blocking):
 		m_Callback(callback),
-		m_IsBlocking(is_blocking)
+		m_IsBlocking(is_blocking),
+		m_DirPath(dir_path)
 	{
-		auto dir_state = QueryDirState(dir_path);
+		auto dir_state = GetDirState();
 		
 		for (const FileState& file : dir_state) {
 			std::cout << file.RelativeFilepath << std::endl;
@@ -125,6 +111,26 @@ public:
 
 	bool DispatchChanges()override{
 		return false;
+	}
+
+	DirState GetDirState()override {
+		return GetDirStateImpl(m_DirPath);
+	}
+
+	DirState GetDirStateImpl(const std::string &dir_path, std::string local_dir_path = "") {
+		DirState state;
+
+		for (DirIt it(dir_path); it; ++it) {
+			if(it.IsFile())
+				state.emplace_back(local_dir_path + it.Name(), it.ModifiedTime());
+			if (it.IsRegularDir()) {
+				auto sub_state = GetDirStateImpl(dir_path + it.Name() + "\\", local_dir_path + it.Name() + "\\");
+				state.reserve(state.size() + sub_state.size());
+				std::move(std::begin(sub_state), std::end(sub_state), std::back_inserter(state));
+			}
+		}
+
+		return state;
 	}
 };
 

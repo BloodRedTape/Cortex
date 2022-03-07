@@ -15,7 +15,7 @@ void Repository::OnDirChanged(FileAction action) {
 	std::cout << "NewCommit : " << commit.Previous << std::endl;
 	std::cout << "\tActionType:   " << FileActionTypeString(commit.Action.Type) << std::endl;
 	std::cout << "\tRelativePath: " << commit.Action.RelativeFilepath << std::endl;
-	std::cout << "\tUnixTime:     " << commit.Action.Time.Seconds << std::endl;
+	std::cout << "\tUnixTime:     " << commit.Action.ModificationTime.Seconds << std::endl;
 
 	m_Commits.push_back(commit);
 }

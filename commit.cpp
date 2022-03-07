@@ -10,7 +10,7 @@ inline void hash_combine(std::size_t& seed, const T& v)
 
 Hash::Hash(const Commit& commit) {
     hash_combine(Data64[0], (int)commit.Action.Type);
-    hash_combine(Data64[0], commit.Action.Time.Seconds);
+    hash_combine(Data64[0], commit.Action.ModificationTime.Seconds);
     hash_combine(Data64[1], commit.Action.RelativeFilepath);
     hash_combine(Data64[0], commit.Previous.Data64[0]);
     hash_combine(Data64[1], commit.Previous.Data64[1]);

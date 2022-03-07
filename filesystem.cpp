@@ -16,38 +16,39 @@ std::istream& operator>>(std::istream& stream, DirState& state) {
 	return stream;
 }
 
-bool Match(const FileState& l, const FileState& r) {
-	return l.RelativeFilepath == r.RelativeFilepath;
-}
-
-std::vector<FileAction> operator-(const DirState& nnew, const DirState& old) {
+std::vector<FileAction> DirState::GetDiffFrom(const DirState& old) {
 	std::vector<FileAction> result;
 
 	for (const FileState& old_file : old) {
-		const FileState *it = nnew.Find(old_file);
+		const FileState *it = this->Find(old_file);
 
 		const bool found = it != nullptr;
 
 		if (!found) {
 			result.emplace_back(FileActionType::Delete, UnixTime(), old_file.RelativeFilepath);
+			continue;
 		}
-
-		if (found) {
-			if (old_file.ModificationTime.Seconds != it->ModificationTime.Seconds) {
-				result.emplace_back(FileActionType::Update, it->ModificationTime, it->RelativeFilepath);
-			}
-		}
+		
+		if (old_file.ModificationTime.Seconds != it->ModificationTime.Seconds) 
+			result.emplace_back(FileActionType::Update, it->ModificationTime, it->RelativeFilepath);
 	}
 
-	for (const FileState& new_file : nnew) {
+	for (const FileState& new_file : *this) {
 		const FileState *it = old.Find(new_file);
 
 		const bool found = it != nullptr;
 
-		if (!found) {
+		if (!found)
 			result.emplace_back(FileActionType::Create, new_file.ModificationTime, new_file.RelativeFilepath);
-		}
 	}
 
 	return result;
+}
+
+const FileState* DirState::Find(const FileState& other)const{
+	for(const FileState &state: *this){
+		if(state.RelativeFilepath == other.RelativeFilepath)
+			return &state;
+	}
+	return nullptr;
 }
