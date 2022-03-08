@@ -6,7 +6,13 @@
 Repository::Repository(std::string path):
 	m_RepositoryPath(std::move(path)),
 	m_DirWatcher(DirWatcher::Create(m_RepositoryPath.c_str(), std::bind(&Repository::OnDirChanged, this, std::placeholders::_1)))
-{}
+{
+	m_History.LoadFrom(m_RepositoryPath + s_HistoryFilename);
+}
+
+Repository::~Repository() {
+	m_History.SaveTo(m_RepositoryPath + s_HistoryFilename);
+}
 
 void Repository::OnDirChanged(FileAction action) {
 	std::cout << "NewCommit : " << m_History.HashLastCommit() << std::endl;

@@ -87,6 +87,8 @@ public:
 
 	Hash HashLastCommit();
 
+	DirState TraceDirState()const;
+
 	bool LoadFrom(const std::string &save_file_path);
 
 	bool SaveTo(const std::string &save_file_path);

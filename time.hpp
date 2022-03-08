@@ -6,6 +6,13 @@
 
 struct UnixTime {
 	u64 Seconds = 0;
+
+	bool operator==(UnixTime other)const{
+		return Seconds==other.Seconds;
+	}
+	bool operator!=(UnixTime other)const{
+		return !(*this == other);
+	}
 };
 
 template <>

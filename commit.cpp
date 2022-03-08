@@ -51,6 +51,24 @@ Hash CommitHistory::HashLastCommit(){
 	return Hash(last);
 }
 
+DirState CommitHistory::TraceDirState()const {
+    DirState state;
+
+    for (const Commit& commit : *this) {
+        FileState *file_state = state.Find(commit.Action.RelativeFilepath);
+
+        if(!file_state){
+            state.push_back(commit.Action);
+            continue;
+        }
+        
+        if (file_state->ModificationTime != commit.Action.ModificationTime)
+            file_state->ModificationTime = commit.Action.ModificationTime;
+    }
+
+    return state;
+}
+
 bool CommitHistory::LoadFrom(const std::string& save_file_path) {
     std::fstream input(save_file_path, std::ios::in | std::ios::binary);
     if(!input)

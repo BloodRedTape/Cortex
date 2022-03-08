@@ -45,10 +45,20 @@ DirStateDiff DirState::GetDiffFrom(const DirState& old) {
 	return result;
 }
 
-const FileState* DirState::Find(const FileState& other)const{
+bool DirState::Has(const std::string& relative_filepath) {
+	return Find(relative_filepath);
+}
+const FileState* DirState::Find(const std::string& relative_filepath)const {
 	for(const FileState &state: *this){
-		if(state.RelativeFilepath == other.RelativeFilepath)
+		if(state.RelativeFilepath == relative_filepath)
 			return &state;
 	}
 	return nullptr;
+}
+FileState* DirState::Find(const std::string& relative_filepath) {
+	return const_cast<FileState *>(const_cast<const DirState*>(this)->Find(relative_filepath));
+}
+
+const FileState* DirState::Find(const FileState& other)const{
+	return Find(other.RelativeFilepath);
 }

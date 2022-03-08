@@ -90,6 +90,12 @@ struct DirState: std::vector<FileState> {
 
 	DirStateDiff GetDiffFrom(const DirState &old);
 
+	bool Has(const std::string &relative_filepath);
+
+	const FileState* Find(const std::string& relative_filepath)const;
+
+	FileState* Find(const std::string& relative_filepath);
+
 	const FileState* Find(const FileState& other)const;
 
 	friend std::ostream &operator<<(std::ostream &stream, const DirState &state);

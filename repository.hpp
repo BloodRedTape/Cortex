@@ -7,11 +7,15 @@
 
 class Repository {
 private:
+	static constexpr const char *s_HistoryFilename = ".history";
+private:
 	CommitHistory m_History;
 	std::string m_RepositoryPath;
 	DirWatcherRef m_DirWatcher;
 public:
 	Repository(std::string path);
+
+	~Repository();
 
 	void OnDirChanged(FileAction action);
 
