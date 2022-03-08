@@ -7,7 +7,7 @@
 
 class Repository {
 private:
-	std::vector<Commit> m_Commits;
+	CommitHistory m_History;
 	std::string m_RepositoryPath;
 	DirWatcherRef m_DirWatcher;
 public:
@@ -15,9 +15,22 @@ public:
 
 	void OnDirChanged(FileAction action);
 
-	Hash HashLastCommit();
-
 	void Run();
+};
+
+class ClientRepository: public Repository {
+private:
+public:
+	ClientRepository(std::string path):
+		Repository(std::move(path))
+	{}
+};
+class ServerRepository: public Repository {
+private:
+public:
+	ServerRepository(std::string path):
+		Repository(std::move(path))
+	{}
 };
 
 #endif//CORTEX_REPOSITORY_HPP

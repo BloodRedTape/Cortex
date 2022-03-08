@@ -9,32 +9,18 @@ Repository::Repository(std::string path):
 {}
 
 void Repository::OnDirChanged(FileAction action) {
-	Commit commit{
-		action,
-		HashLastCommit()
-	};
+	std::cout << "NewCommit : " << m_History.HashLastCommit() << std::endl;
+	std::cout << "\tActionType:   " << FileActionTypeString(action.Type) << std::endl;
+	std::cout << "\tRelativePath: " << action.RelativeFilepath << std::endl;
+	std::cout << "\tUnixTime:     " << action.ModificationTime.Seconds << std::endl;
 
-	std::cout << "NewCommit : " << commit.Previous << std::endl;
-	std::cout << "\tActionType:   " << FileActionTypeString(commit.Action.Type) << std::endl;
-	std::cout << "\tRelativePath: " << commit.Action.RelativeFilepath << std::endl;
-	std::cout << "\tUnixTime:     " << commit.Action.ModificationTime.Seconds << std::endl;
-
-	m_Commits.push_back(commit);
-}
-
-Hash Repository::HashLastCommit()
-{
-	if (!m_Commits.size()) 
-		return Hash();
-
-	const Commit &last = m_Commits.back();
-
-	return Hash(last);
+	m_History.Add(std::move(action));
 }
 
 void Repository::Run() {
-	while (true) {
+	for(int i = 0; i<5; i++){
 		m_DirWatcher->DispatchChanges();
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
+	m_History.SaveTo(m_RepositoryPath + ".history");
 }

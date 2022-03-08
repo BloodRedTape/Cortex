@@ -8,4 +8,4 @@ add_executable(Cortex
 	"repository.cpp"
 	"filesystem.cpp"
 	"win32_filesystem.cpp"
-)
+ "error.hpp")
