@@ -4,7 +4,7 @@
 #include <iostream>
 
 template <typename T, typename ...ArgsType>
-void Print(const char *fmt, const T &arg, const ArgsType&...args) {
+inline void Print(const char *fmt, const T &arg, const ArgsType&...args) {
 	while (*fmt) {
 		char ch = *fmt++;
 		if (ch == '%') {
@@ -15,12 +15,12 @@ void Print(const char *fmt, const T &arg, const ArgsType&...args) {
 	}
 }
 
-void Print(const char *fmt){
+inline void Print(const char *fmt){
 	std::cout << fmt;	
 }
 
 template <typename ...ArgsType>
-void Println(const char *fmt, const ArgsType&...args){
+inline void Println(const char *fmt, const ArgsType&...args){
 	Print(fmt, args...);
 	Print("\n");
 }
