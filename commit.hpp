@@ -68,9 +68,6 @@ struct Serializer<Commit>{
 
 class CommitHistory : private std::vector<Commit>{
 private:
-	// serialization format is little endian right now
-	static constexpr u64 s_MagicWord = 0xFFAACC0000CCAAFF;
-
 	friend class Serializer<CommitHistory>;
 public:
 	CommitHistory() = default;

@@ -9,11 +9,17 @@
 template <typename T>
 struct Serializer{
 	static void Serialize(std::ostream& stream, const T& value) {
-		stream << value;
+		size_t size = sizeof(T);
+		const uint8_t *data = reinterpret_cast<const uint8_t *>(&value);
+		for(int i = 0; i<size; i++)
+			stream << (char)data[i];
 	}
 	static T Deserialize(std::istream& stream) {
 		T value{};
-		stream >> value;
+		size_t size = sizeof(T);
+		uint8_t *data = reinterpret_cast<uint8_t *>(&value);
+		for(int i = 0; i<size; i++)
+			stream >> (char&)data[i];
 		return value;
 	}
 };

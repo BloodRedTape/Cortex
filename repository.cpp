@@ -4,17 +4,22 @@
 #include <thread>
 
 Repository::Repository(std::string path):
+	m_History(path + s_HistoryFilename),
 	m_RepositoryPath(std::move(path)),
-	m_DirWatcher(DirWatcher::Create(m_RepositoryPath.c_str(), std::bind(&Repository::OnDirChanged, this, std::placeholders::_1)))
-{
-	m_History.LoadFrom(m_RepositoryPath + s_HistoryFilename);
-}
+	m_DirWatcher(
+		DirWatcher::Create(
+			m_RepositoryPath.c_str(), 
+			std::bind(&Repository::OnDirChanged, this, std::placeholders::_1), 
+			m_History.TraceDirState()
+		)
+	)
+{}
 
-Repository::~Repository() {
+Repository::~Repository(){
 	m_History.SaveTo(m_RepositoryPath + s_HistoryFilename);
 }
 
-void Repository::OnDirChanged(FileAction action) {
+void Repository::OnDirChanged(FileAction action){
 	std::cout << "NewCommit : " << m_History.HashLastCommit() << std::endl;
 	std::cout << "\tActionType:   " << FileActionTypeString(action.Type) << std::endl;
 	std::cout << "\tRelativePath: " << action.RelativeFilepath << std::endl;
@@ -23,7 +28,7 @@ void Repository::OnDirChanged(FileAction action) {
 	m_History.Add(std::move(action));
 }
 
-void Repository::Run() {
+void Repository::Run(){
 	for(int i = 0; i<5; i++){
 		m_DirWatcher->DispatchChanges();
 		std::this_thread::sleep_for(std::chrono::seconds(1));
