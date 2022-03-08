@@ -2,10 +2,10 @@
 
 project(Cortex)
 
+add_subdirectory(core)
+
 add_executable(Cortex 
 	"cortex.cpp"
-	"commit.cpp" 
-	"repository.cpp"
-	"filesystem.cpp"
-	"win32_filesystem.cpp"
- "error.hpp")
+)
+
+target_link_libraries(Cortex CortexCore)
