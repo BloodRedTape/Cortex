@@ -4,7 +4,7 @@
 
 int main()
 {
-	ClientRepository repo("G:\\repo\\");
+	ClientRepository repo("W:\\Dev\\Cortex\\out\\repo\\");
 	repo.Run();
 	return 0;
 }

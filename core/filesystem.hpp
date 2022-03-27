@@ -8,6 +8,7 @@
 #include <ostream>
 #include <istream>
 #include <vector>
+#include <regex>
 #include "time.hpp"
 #include "serializer.hpp"
 
@@ -105,6 +106,35 @@ struct DirState: std::vector<FileState> {
 
 using DirWatcherRef = std::unique_ptr<class DirWatcher>;
 
+class IgnoreList {
+private:
+	std::vector<std::regex> m_Ignorers;
+public:
+	IgnoreList() = default;
+
+	IgnoreList(std::initializer_list<std::regex> list) {
+		m_Ignorers.reserve(list.size());
+		for(const auto &regex: list)
+			Add(regex);
+	}
+
+	IgnoreList(IgnoreList &&) = default;
+
+	IgnoreList &operator=(IgnoreList &&) = default;
+
+	void Add(std::regex regex) {
+		m_Ignorers.push_back(std::move(regex));
+	}
+
+	bool ShouldBeIgnored(const std::string& item) {
+		for (const std::regex& regex : m_Ignorers) {
+			if(std::regex_match(item, regex))
+				return true;
+		}
+		return false;
+	}
+};
+
 class DirWatcher {
 public:
 	using OnDirChangedCallback = std::function<void(FileAction)>;
@@ -115,7 +145,7 @@ public:
 
 	virtual DirState GetDirState() = 0;
 	
-	static DirWatcherRef Create(std::string dir_path, OnDirChangedCallback callback, DirState initial_state = {}, bool is_blocking = true);
+	static DirWatcherRef Create(std::string dir_path, OnDirChangedCallback callback, IgnoreList ignore_list = {}, DirState initial_state = {}, bool is_blocking = true);
 };
 
 #endif //CORTEX_FILESYSTEM_HPP

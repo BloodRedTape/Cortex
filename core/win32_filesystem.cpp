@@ -93,12 +93,14 @@ class Win32DirWatcher: public DirWatcher{
 private:
 	std::string m_DirPath;
 	OnDirChangedCallback m_Callback;
+	IgnoreList m_IgnoreList;
 	DirState m_LastState;
 	bool m_IsBlocking;
 public:
-	Win32DirWatcher(std::string dir_path, OnDirChangedCallback callback, DirState initial_state, bool is_blocking):
+	Win32DirWatcher(std::string dir_path, OnDirChangedCallback callback, IgnoreList ignore_list, DirState initial_state, bool is_blocking):
 		m_DirPath(std::move(dir_path)),
 		m_Callback(callback),
+		m_IgnoreList(std::move(ignore_list)),
 		m_LastState(std::move(initial_state)),
 		m_IsBlocking(is_blocking)
 	{
@@ -120,8 +122,10 @@ public:
 		if (!diff.size()) 
 			return false;
 
-		for (const FileAction& action : diff) 
-			m_Callback(action);
+		for (const FileAction& action : diff){
+			if(!m_IgnoreList.ShouldBeIgnored(action.RelativeFilepath))
+				m_Callback(action);
+		}
 
 		m_LastState = std::move(current_state);
 
@@ -149,6 +153,6 @@ public:
 	}
 };
 
-DirWatcherRef DirWatcher::Create(std::string dir_path, OnDirChangedCallback callback, DirState initial_state, bool is_blocking) {
-	return std::make_unique<Win32DirWatcher>(std::move(dir_path), callback, std::move(initial_state), is_blocking);
+DirWatcherRef DirWatcher::Create(std::string dir_path, OnDirChangedCallback callback, IgnoreList ignore_list, DirState initial_state, bool is_blocking) {
+	return std::make_unique<Win32DirWatcher>(std::move(dir_path), callback, std::move(ignore_list), std::move(initial_state), is_blocking);
 }

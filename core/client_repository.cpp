@@ -10,6 +10,7 @@ ClientRepository::ClientRepository(std::string path):
 		DirWatcher::Create(
 			m_RepositoryPath.c_str(), 
 			std::bind(&ClientRepository::OnDirChanged, this, std::placeholders::_1), 
+			{std::regex(".history")},
 			m_History.TraceDirState()
 		)
 	)

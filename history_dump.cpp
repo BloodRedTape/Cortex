@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
 		history_path = argv[1];
 	} else {
 		Warning("No .history path supplied, using default one");
-		history_path = "G:\\repo\\.history";
+		history_path = "W:\\Dev\\Cortex\\out\\repo\\.history";
 	}
 
 	CommitHistory history;
@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 		return Error("Can't load history from '%'", history_path);
 	
 	for (const Commit& commit : history) {
-		Println("Prev: %,\nFileActionType: %,\nRelFilepath: %,\nUnixTime: %",
+		Println("Prev: %,\nFileActionType: %,\nRelFilepath: %,\nUnixTime: %\n",
 			commit.Previous,
 			FileActionTypeString(commit.Action.Type),
 			commit.Action.RelativeFilepath,
