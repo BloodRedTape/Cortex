@@ -1,4 +1,5 @@
-#include "filesystem.hpp"
+#include "fs/dir_state.hpp"
+#include "utils.hpp"
 
 std::ostream& operator<<(std::ostream& stream, const DirState& state) {
 	for (const auto& file_state : state)

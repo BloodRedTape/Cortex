@@ -5,6 +5,7 @@
 #include <istream>
 #include <string>
 #include <vector>
+#include "utils.hpp"
 
 template <typename T>
 struct Serializer{

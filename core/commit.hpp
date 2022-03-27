@@ -5,7 +5,7 @@
 #include <cassert>
 #include "time.hpp"
 #include "utils.hpp"
-#include "filesystem.hpp"
+#include "fs/dir_state.hpp"
 #include "serializer.hpp"
 
 struct Hash {

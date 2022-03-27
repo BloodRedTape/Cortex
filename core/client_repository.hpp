@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "commit.hpp"
-#include "filesystem.hpp"
+#include "fs/dir_watcher.hpp"
 
 constexpr const char *s_HistoryFilename = ".history";
 

@@ -5,10 +5,10 @@ project(CortexCore)
 add_library(CortexCore STATIC
 	"commit.cpp"
 	"client_repository.cpp"
-	"filesystem.cpp"
+	
 	"win32_filesystem.cpp"
-)
+	"fs/file_action.hpp"  "fs/dir_state.hpp" "fs/dir_state.cpp" "fs/dir_watcher.hpp")
 
 target_include_directories(CortexCore 
-	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+	PUBLIC "./"
 )
