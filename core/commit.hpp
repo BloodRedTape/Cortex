@@ -71,9 +71,9 @@ private:
 public:
 	CommitHistory() = default;
 
-	CommitHistory(CommitHistory &&) = default;
+	CommitHistory(std::string binary_history);
 
-	CommitHistory(const std::string &save_file_path);
+	CommitHistory(CommitHistory &&) = default;
 
 	CommitHistory &operator=(CommitHistory &&) = default;
 
@@ -85,11 +85,10 @@ public:
 
 	DirState TraceDirState()const;
 
-	bool LoadFrom(const std::string &save_file_path);
+	std::string ToBinary()const;
 
-	bool SaveTo(const std::string &save_file_path);
-	
 	auto begin()const { return std::vector<Commit>::begin(); }
+
 	auto end()const { return std::vector<Commit>::end(); }
 };
 

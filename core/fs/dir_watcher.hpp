@@ -3,8 +3,8 @@
 
 #include <string>
 #include <functional>
-#include "fs/dir_state.hpp"
 #include "fs/ignore_list.hpp"
+#include "fs/dir.hpp"
 
 using DirWatcherRef = std::unique_ptr<class DirWatcher>;
 
@@ -15,10 +15,8 @@ public:
 	virtual ~DirWatcher() = default;
 
 	virtual bool DispatchChanges() = 0;
-
-	virtual DirState GetDirState() = 0;
 	
-	static DirWatcherRef Create(std::string dir_path, OnDirChangedCallback callback, IgnoreList ignore_list = {}, DirState initial_state = {}, bool is_blocking = true);
+	static DirWatcherRef Create(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list = {}, DirState initial_state = {}, bool is_blocking = true);
 };
 
 #endif//CORTEX_DIR_WATCHER_HPP

@@ -1,8 +1,6 @@
 #include "commit.hpp"
 #include "error.hpp"
-#include <iomanip>
-#include <fstream>
-#include <iostream>
+#include <sstream>
 
 template <class T>
 inline void hash_combine(std::size_t& seed, const T& v)
@@ -30,8 +28,10 @@ std::ostream& operator<<(std::ostream& stream, const Hash& hash) {
     return stream;
 }
 
-CommitHistory::CommitHistory(const std::string &save_file_path){
-    (void)LoadFrom(save_file_path);
+CommitHistory::CommitHistory(std::string binary_history){
+    std::stringstream stream(binary_history);
+    
+    *this = std::move(Serializer<CommitHistory>::Deserialize(stream));
 }
 
 void CommitHistory::Add(FileAction action) {
@@ -69,25 +69,10 @@ DirState CommitHistory::TraceDirState()const {
     return state;
 }
 
-bool CommitHistory::LoadFrom(const std::string& save_file_path) {
-    std::fstream input(save_file_path, std::ios::in | std::ios::binary);
-    if(!input)
-        return Error("Can't open file % for reading", save_file_path);
+std::string CommitHistory::ToBinary() const{
+    std::stringstream stream;
 
-    CommitHistory history = Serializer<CommitHistory>::Deserialize(input);
-
-    *this = std::move(history);
-
-    return true;
-}
-
-bool CommitHistory::SaveTo(const std::string& save_file_path) {
-    std::fstream output(save_file_path, std::ios::out | std::ios::binary);
-
-    if(!output)
-        return Error("Can't open file % for writing", save_file_path);
+    Serializer<CommitHistory>::Serialize(stream, *this);
     
-    Serializer<CommitHistory>::Serialize(output, *this);
-
-    return true;
+    return stream.str();
 }

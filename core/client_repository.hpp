@@ -10,8 +10,8 @@ constexpr const char *s_HistoryFilename = ".history";
 class ClientRepository {
 private:
 private:
+	DirRef m_RepositoryDir;
 	CommitHistory m_History;
-	std::string m_RepositoryPath;
 	DirWatcherRef m_DirWatcher;
 public:
 	ClientRepository(std::string path);

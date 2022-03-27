@@ -4,11 +4,13 @@
 #include <thread>
 
 ClientRepository::ClientRepository(std::string path):
-	m_History(path + s_HistoryFilename),
-	m_RepositoryPath(std::move(path)),
+	m_RepositoryDir(
+		Dir::Create(std::move(path))
+	),
+	m_History(m_RepositoryDir->ReadEntireFile(".history").second),
 	m_DirWatcher(
 		DirWatcher::Create(
-			m_RepositoryPath.c_str(), 
+			m_RepositoryDir.get(),
 			std::bind(&ClientRepository::OnDirChanged, this, std::placeholders::_1), 
 			{std::regex(".history")},
 			m_History.TraceDirState()
@@ -17,7 +19,8 @@ ClientRepository::ClientRepository(std::string path):
 {}
 
 ClientRepository::~ClientRepository(){
-	m_History.SaveTo(m_RepositoryPath + s_HistoryFilename);
+	std::string history = m_History.ToBinary();
+	m_RepositoryDir->WriteEntireFile(".history", history.data(), history.size());
 }
 
 void ClientRepository::OnDirChanged(FileAction action){
@@ -30,9 +33,9 @@ void ClientRepository::OnDirChanged(FileAction action){
 }
 
 void ClientRepository::Run(){
-	for(int i = 0; i<5; i++){
+	for(int i = 0; i<10; i++){
 		m_DirWatcher->DispatchChanges();
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
-	m_History.SaveTo(m_RepositoryPath + ".history");
+//	m_History.SaveTo(m_RepositoryPath + ".history");
 }
