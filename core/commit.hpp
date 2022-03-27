@@ -58,10 +58,9 @@ struct Serializer<Commit>{
 		Serializer<Hash>::Serialize(stream, value.Previous);
 	}
 	static Commit Deserialize(std::istream& stream) {
-		return {
-			Serializer<FileAction>::Deserialize(stream),
-			Serializer<Hash>::Deserialize(stream)
-		};
+		FileAction action = Serializer<FileAction>::Deserialize(stream);
+		Hash hash = Serializer<Hash>::Deserialize(stream);
+		return Commit(action, hash);
 	}
 };
 
@@ -89,7 +88,9 @@ public:
 	bool LoadFrom(const std::string &save_file_path);
 
 	bool SaveTo(const std::string &save_file_path);
-
+	
+	auto begin()const { return std::vector<Commit>::begin(); }
+	auto end()const { return std::vector<Commit>::end(); }
 };
 
 template <>
