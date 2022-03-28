@@ -33,7 +33,7 @@ void ClientRepository::OnDirChanged(FileAction action){
 }
 
 void ClientRepository::Run(){
-	for(int i = 0; i<10; i++){
+	for(int i = 0; i<3; i++){
 		m_DirWatcher->DispatchChanges();
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
