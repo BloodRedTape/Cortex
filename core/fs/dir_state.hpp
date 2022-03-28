@@ -25,6 +25,8 @@ struct DirState: std::vector<FileState> {
 
 	const FileState* Find(const FileState& other)const;
 
+	void Remove(FileState *state);
+
 	friend std::ostream &operator<<(std::ostream &stream, const DirState &state);
 
 	friend std::istream &operator>>(std::istream &stream, DirState &state);

@@ -1,3 +1,4 @@
+#include "dir_state.hpp"
 #include "fs/dir_state.hpp"
 #include "utils.hpp"
 
@@ -62,4 +63,10 @@ FileState* DirState::Find(const std::string& relative_filepath) {
 
 const FileState* DirState::Find(const FileState& other)const{
 	return Find(other.RelativeFilepath);
+}
+
+void DirState::Remove(FileState *state){
+	assert(state >= data() && state < data() + size());
+	std::swap(back(), *state);
+	pop_back();
 }

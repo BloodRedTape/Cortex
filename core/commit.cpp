@@ -55,15 +55,24 @@ DirState CommitHistory::TraceDirState()const {
     DirState state;
 
     for (const Commit& commit : *this) {
-        FileState *file_state = state.Find(commit.Action.RelativeFilepath);
-
-        if(!file_state){
+        switch (commit.Action.Type) {
+        case FileActionType::Create: {
+            assert(!state.Has(commit.Action.RelativeFilepath));
             state.push_back(commit.Action);
-            continue;
-        }
-        
-        if (file_state->ModificationTime != commit.Action.ModificationTime)
+        }break;
+        case FileActionType::Update: {
+            FileState *file_state = state.Find(commit.Action.RelativeFilepath);
+            assert(file_state);
             file_state->ModificationTime = commit.Action.ModificationTime;
+        }break;
+        case FileActionType::Delete: {
+            FileState *file_state = state.Find(commit.Action.RelativeFilepath);
+            assert(file_state);
+            state.Remove(file_state);
+        }break;
+        default:
+            assert(false);
+        }
     }
 
     return state;
