@@ -30,5 +30,7 @@ int main(int argc, char **argv) {
 		);
 	}
 
+	const volatile int money = 34;
+
 	return 0;
 }
