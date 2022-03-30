@@ -1,9 +1,6 @@
-﻿#include <iostream>
-#include "client_repository.hpp"
-#include "print.hpp"
+﻿#include "client_repository.hpp"
 
-int main()
-{
+int main(){
 	ClientRepository repo("W:\\Dev\\Cortex\\out\\repo\\");
 	repo.Run();
 	return 0;
