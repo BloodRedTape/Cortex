@@ -8,8 +8,9 @@ add_library(CortexCore STATIC
 	"./core/win32_fs.cpp"
 	"./core/win32_net.cpp"
 	"./core/fs/dir_state.cpp"
-	"core/net/ip.cpp"
+	"./core/net/ip.cpp"
 	"./core/net/udp_socket.cpp"
+	"./core/net/tcp_socket.cpp"
 )
 
 target_link_libraries(CortexCore ws2_32)
