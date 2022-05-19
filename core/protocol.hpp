@@ -4,8 +4,8 @@
 #include "utils.hpp"
 
 enum class RequestType: u32{
-	File,
-	History
+	Pull,
+	Push
 };
 
 enum class ResponceStatus: u32{
@@ -15,13 +15,13 @@ enum class ResponceStatus: u32{
 
 struct Request {
 	RequestType Type;
+	std::string Content;
 };
 
 struct Responce {
 	ResponceStatus Status;
 	std::string Content;
 };
-
 
 constexpr u64 BroadcastMagicWord = 0xBB4400AAAA0044BB;
 

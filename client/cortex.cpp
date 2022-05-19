@@ -1,6 +1,6 @@
 #include <iostream>
 #include "fs/dir.hpp"
-#include "net/udp_socket.hpp"
+#include "net/tcp_socket.hpp"
 #include "commit.hpp"
 
 struct Host {
@@ -12,27 +12,10 @@ private:
 	// The Truth is here
 	CommitHistory History;
 public:
-	void OnPullRequest(Host host){ 
-		SendHistory(host);
+	
+	void OnRequest(const Request& request, Responce& responce) {
+
 	}
-
-	void OnPushRequest(Host src, Hash top_commit, std::vector<FileAction> actions){ 
-		if (History.HashLastCommit() == top_commit) {
-			//Apply
-			SendOk(src);
-			BroadcastHistoryChanged();
-		} else {
-			SendHistory(src);
-		}
-	}
-
-	void BroadcastHistoryChanged() {
-		
-	}
-
-	void SendHistory(Host host){ }
-
-	void SendOk(Host host){ }
 };
 
 class Client {
