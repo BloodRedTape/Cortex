@@ -4,7 +4,7 @@ project(Cortex)
 
 add_library(CortexCore STATIC
 	"./core/commit.cpp"
-	"./core/client_repository.cpp"
+	"core/repository.cpp"
 	"./core/win32_fs.cpp"
 	"./core/win32_net.cpp"
 	"./core/fs/dir_state.cpp"
