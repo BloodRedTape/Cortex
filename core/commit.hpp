@@ -22,6 +22,11 @@ struct Hash {
 	Hash(const struct Commit &commit);
 
 	friend std::ostream &operator<<(std::ostream &stream, const Hash &hash);
+	
+	bool operator==(const Hash& other)const {
+		return Data64[0] == other.Data64[0]
+			&& Data64[1] == other.Data64[1];
+	}
 };
 
 template<>
