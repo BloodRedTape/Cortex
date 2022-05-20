@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <sstream>
 #include "utils.hpp"
 #include "commit.hpp"
 #include "serializer.hpp"
@@ -21,7 +22,7 @@ struct PushRequest {
 
 struct Request {
 	const RequestType Type;
-	std::string Content;
+	const std::string Content;
 
 	Request(PullRequest request):
 		Type(RequestType::Pull),
@@ -29,12 +30,9 @@ struct Request {
 	{}
 
 	Request(PushRequest request):
-		Type(RequestType::Push)
-	{
-		std::stringstream stream;
-		Serializer<std::vector<FileCommit>>::Serialize(stream, request.Commits);
-		Content = stream.str();
-	}
+		Type(RequestType::Push),
+		Content(StringSerializer<std::vector<FileCommit>>::Serialize(request.Commits))
+	{}
 
 	PullRequest AsPullRequest()const{
 		assert(Type == RequestType::Pull);
@@ -46,7 +44,7 @@ struct Request {
 	PushRequest AsPushRequest()const {
 		assert(Type == RequestType::Push);
 
-		return {Serializer<std::vector<FileCommit>>::Deserialize(std::stringstream(Content))};
+		return {StringSerializer<std::vector<FileCommit>>::Deserialize(Content)};
 	}
 };
 
@@ -66,7 +64,7 @@ struct FailureResponce { };
 
 struct Responce {
 	const ResponceType Type;
-	std::string Content;
+	const std::string Content;
 
 	Responce(SuccessResponce):
 		Type(ResponceType::Success)
@@ -77,17 +75,14 @@ struct Responce {
 	{}
 
 	Responce(DiffResponce diff):
-		Type(ResponceType::Diff)
-	{
-		std::stringstream stream;
-		Serializer<std::vector<FileCommit>>::Serialize(stream, diff.Commits);
-		Content = stream.str();
-	}
+		Type(ResponceType::Diff),
+		Content(StringSerializer<std::vector<FileCommit>>::Serialize(diff.Commits))
+	{}
 
 	DiffResponce AsDiffResponce()const {
 		assert(Type == ResponceType::Diff);
 
-		return {Serializer<std::vector<FileCommit>>::Deserialize(std::stringstream(Content))};
+		return {StringSerializer<std::vector<FileCommit>>::Deserialize(Content)};
 	}
 };
 
