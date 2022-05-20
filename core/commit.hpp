@@ -19,6 +19,11 @@ struct Hash {
 
 	Hash() = default;
 
+	Hash(const u8* data) {
+		for (int i = 0; i < 16; i++) 
+			Data8[i] = data[i];
+	}
+
 	Hash(const struct Commit &commit);
 
 	friend std::ostream &operator<<(std::ostream &stream, const Hash &hash);
@@ -69,6 +74,28 @@ struct Serializer<Commit>{
 	}
 };
 
+struct FileCommit: Commit{
+	std::string Content;
+
+	FileCommit(FileAction action, Hash previous, std::string content):
+		Commit(std::move(action), previous),
+		Content(content)
+	{}
+};
+
+template <>
+struct Serializer<FileCommit>{
+	static void Serialize(std::ostream& stream, const FileCommit& value) {
+		Serializer<Commit>::Serialize(stream, value);
+		Serializer<std::string>::Serialize(stream, value.Content);
+	}
+
+	static FileCommit Deserialize(std::istream& stream) {
+		Commit commit = Serializer<Commit>::Deserialize(stream);
+		std::string content = Serializer<std::string>::Deserialize(stream);
+		return FileCommit(std::move(commit.Action), commit.Previous, std::move(content));
+	}
+};
 
 class CommitHistory : private std::vector<Commit>{
 private:
