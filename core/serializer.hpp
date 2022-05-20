@@ -4,6 +4,7 @@
 #include <ostream>
 #include <istream>
 #include <string>
+#include <sstream>
 #include <vector>
 #include "utils.hpp"
 
@@ -16,6 +17,19 @@ struct Serializer{
 		T value{};
 		stream.read((char*)&value, sizeof(value));
 		return value;
+	}
+};
+
+template <typename T>
+struct StringSerializer {
+	static std::string Serialize(const T& value) {
+		std::stringstream stream;
+		Serializer<T>::Serialize(stream, value);
+		return stream.str();
+	}
+
+	static T Deserialize(const std::string& string) {
+		return Serializer<T>::Deserialize(std::stringstream(string));
 	}
 };
 
