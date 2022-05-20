@@ -1,5 +1,6 @@
 #include "net/udp_socket.hpp"
 #include "net/tcp_socket.hpp"
+#include "net/tcp_listener.hpp"
 #include <atomic>
 #include <WinSock2.h>
 
@@ -107,4 +108,18 @@ u32 TcpSocket::ReceiveImpl(SocketHandle socket, void* data, u32 size, bool& is_d
 	}while(actual_received < size);
 
 	return actual_received;
+}
+
+bool TcpListener::ListenImpl(SocketHandle socket) {
+	return listen((SOCKET)socket, 20) == 0;
+}
+
+SocketHandle TcpListener::AcceptImpl(SocketHandle socket, IpAddress& src_ip, u16& src_port_hbo) {
+	sockaddr_in src_addr = {0};
+	int addr_len = sizeof(src_addr);
+	SOCKET connection = accept((SOCKET)socket, (sockaddr*)&src_addr, &addr_len);
+	
+	src_ip = IpAddress(src_addr.sin_addr.s_addr);
+	src_port_hbo = ToHostByteOrder(src_addr.sin_port);		
+	return (SocketHandle)connection;
 }

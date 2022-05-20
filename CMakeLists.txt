@@ -11,6 +11,7 @@ add_library(CortexCore STATIC
 	"./core/net/ip.cpp"
 	"./core/net/udp_socket.cpp"
 	"./core/net/tcp_socket.cpp"
+	"./core/net/tcp_listener.cpp"
 )
 
 target_link_libraries(CortexCore ws2_32)

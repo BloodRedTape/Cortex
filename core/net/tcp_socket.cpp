@@ -1,15 +1,21 @@
 #include "net/tcp_socket.hpp"
 #include <utility>
 
-TcpSocket::TcpSocket(TcpSocket&& other){
+TcpSocket::TcpSocket(TcpSocket&& other)noexcept{
 	*this = std::move(other);
 }
+
+TcpSocket::TcpSocket(SocketHandle handle, IpAddress remote_address, u16 remote_port) :
+	m_Handle(handle),
+	m_RemoteIpAddress(remote_address),
+	m_RemotePort(remote_port)
+{}
 
 TcpSocket::~TcpSocket(){
 	Disconnect();
 }
 
-TcpSocket& TcpSocket::operator=(TcpSocket&& other){
+TcpSocket& TcpSocket::operator=(TcpSocket&& other)noexcept{
 	Disconnect();
 	std::swap(m_Handle, other.m_Handle);
 	std::swap(m_RemoteIpAddress, other.m_RemoteIpAddress);

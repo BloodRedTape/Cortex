@@ -11,11 +11,13 @@ private:
 public:
 	TcpSocket() = default;
 
-	TcpSocket(TcpSocket &&);
+	TcpSocket(SocketHandle handle, IpAddress remote_address, u16 remote_port);
+
+	TcpSocket(TcpSocket &&)noexcept;
 
 	~TcpSocket();
 
-	TcpSocket &operator=(TcpSocket &&);
+	TcpSocket &operator=(TcpSocket &&)noexcept;
 
 	bool Connect(IpAddress address, u16 port_hbo);
 
