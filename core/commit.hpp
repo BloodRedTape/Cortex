@@ -118,10 +118,10 @@ public:
 	DirState TraceDirState()const;
 
 	std::string ToBinary()const;
+	
+	using std::vector<Commit>::begin;
 
-	auto begin()const { return std::vector<Commit>::begin(); }
-
-	auto end()const { return std::vector<Commit>::end(); }
+	using std::vector<Commit>::end;
 };
 
 template <>
