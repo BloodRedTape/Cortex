@@ -16,6 +16,10 @@ public:
 
 	virtual bool WriteEntireFile(std::string relative_path, const void *data, size_t size) = 0;
 
+	bool WriteEntireFile(std::string relative_path, const std::string &content) {
+		return WriteEntireFile(std::move(relative_path), content.data(), content.size());
+	}
+
 	static DirRef Create(std::string dir_path);
 };
 
