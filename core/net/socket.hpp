@@ -12,11 +12,13 @@ public:
 protected:
 	static constexpr SocketHandle InvalidSocket = -1;
 protected:
-	static SocketHandle OpenImpl();
+	static SocketHandle OpenImpl(bool is_udp);
 
 	static void CloseImpl(SocketHandle socket);
 
 	static bool BindImpl(SocketHandle socket, IpAddress address, u16 port_hbo);
+
+	static void SetBlocking(SocketHandle socket, bool is_blocking);
 };
 
 #endif//CORTEX_SOCKET_HPP

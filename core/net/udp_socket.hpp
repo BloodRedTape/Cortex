@@ -39,6 +39,8 @@ public:
 		u16 dummy_port;
 		return Receive(data, size, dummy_ip, dummy_port);
 	}
+
+	void SetBlocking(bool is_blocking) { Socket::SetBlocking(m_Handle, is_blocking); }
 private:
 	static u32 SendImpl(SocketHandle socket, const void *data, u32 size, IpAddress dst_ip, u16 dst_port_hbo);
 

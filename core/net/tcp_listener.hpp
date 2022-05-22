@@ -19,6 +19,8 @@ public:
 
 	TcpSocket Accept();
 
+	void SetBlocking(bool is_blocking) { Socket::SetBlocking(m_Handle, is_blocking); }
+
 private:
 	bool IsValid()const {
 		return m_Handle != InvalidSocket;

@@ -25,7 +25,7 @@ void UdpSocket::Open() {
 	if(IsOpen())
 		return;
 
-	m_Handle = OpenImpl();
+	m_Handle = OpenImpl(true);
 }
 
 void UdpSocket::Close(){

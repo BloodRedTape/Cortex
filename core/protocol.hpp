@@ -6,7 +6,6 @@
 #include "commit.hpp"
 #include "serializer.hpp"
 
-
 enum class RequestType: u32{
 	Pull,
 	Push
@@ -86,9 +85,15 @@ struct Responce {
 	}
 };
 
+constexpr u64 TransitionMagicWord = 0xCC8800DDDD0088CC;
+
+struct TransitionProtocolHeader {
+	u64 MagicWord = TransitionMagicWord;
+	u64 TransitionSize = 0;
+};
 
 constexpr u64 BroadcastMagicWord = 0xBB4400AAAA0044BB;
 
-struct BroadcastDatagram {
+struct BroadcastProtocolHeader{
 	u64 MagicWord = BroadcastMagicWord;
 };

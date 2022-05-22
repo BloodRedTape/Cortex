@@ -24,6 +24,8 @@ TcpSocket& TcpSocket::operator=(TcpSocket&& other)noexcept{
 }
 
 bool TcpSocket::Connect(IpAddress address, u16 port_hbo){
+	MakeInvalid();
+	MakeValid();
 	return ConnectImpl(m_Handle, address, port_hbo);
 }
 
@@ -69,7 +71,7 @@ void TcpSocket::MakeValid(){
 	if(IsValid())
 		return;
 
-	m_Handle = Socket::OpenImpl();
+	m_Handle = Socket::OpenImpl(false);
 }
 
 void TcpSocket::MakeInvalid(){
