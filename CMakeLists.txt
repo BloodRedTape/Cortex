@@ -14,6 +14,8 @@ add_library(CortexCore STATIC
 	"./core/net/tcp_listener.cpp"
 )
 
+target_compile_features(CortexCore PUBLIC cxx_std_17)
+
 target_link_libraries(CortexCore ws2_32)
 
 target_include_directories(CortexCore 
