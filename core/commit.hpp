@@ -6,6 +6,7 @@
 #include "time.hpp"
 #include "utils.hpp"
 #include "fs/dir_state.hpp"
+#include "fs/dir.hpp"
 #include "serializer.hpp"
 
 struct Hash {
@@ -58,6 +59,10 @@ struct Commit{
 		Action(std::move(action)),
 		Previous(previous)
 	{}
+
+	friend std::ostream& operator<<(std::ostream& stream, const Commit& commit) {
+		return stream << '(' << commit.Previous << '|' << FileActionTypeString(commit.Action.Type) << '|' << commit.Action.RelativeFilepath << ')';
+	}
 };
 
 template <>
@@ -80,6 +85,11 @@ struct FileCommit: Commit{
 	FileCommit(FileAction action, Hash previous, std::string content):
 		Commit(std::move(action), previous),
 		Content(content)
+	{}
+
+	FileCommit(Commit commit, std::string content = {}):
+		Commit(std::move(commit)),
+		Content(std::move(content))
 	{}
 };
 
@@ -141,6 +151,8 @@ struct Serializer<CommitHistory>{
 		return result;
 	}
 };
+
+extern void ApplyCommitsToDir(Dir *dir, const std::vector<FileCommit> &commits);
 
 
 #endif//CORTEX_COMMIT_HPP
