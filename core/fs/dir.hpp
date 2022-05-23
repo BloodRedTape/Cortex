@@ -12,13 +12,15 @@ public:
 
 	virtual DirState GetDirState() = 0;
 
-	virtual std::pair<bool, std::string> ReadEntireFile(std::string relative_path) = 0;
+	virtual std::pair<bool, std::string> ReadEntireFile(const std::string &relative_path) = 0;
 
-	virtual bool WriteEntireFile(std::string relative_path, const void *data, size_t size) = 0;
+	virtual bool WriteEntireFile(const std::string &relative_path, const void *data, size_t size) = 0;
 
-	bool WriteEntireFile(std::string relative_path, const std::string &content) {
-		return WriteEntireFile(std::move(relative_path), content.data(), content.size());
+	bool WriteEntireFile(const std::string &relative_path, const std::string &content) {
+		return WriteEntireFile(relative_path, content.data(), content.size());
 	}
+
+	virtual bool DeleteFile(const std::string &relative_path) = 0;
 
 	static DirRef Create(std::string dir_path);
 };

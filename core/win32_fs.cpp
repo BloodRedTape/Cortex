@@ -119,7 +119,7 @@ public:
 		return state;
 	}
 
-	std::pair<bool, std::string> ReadEntireFile(std::string relative_path)override{
+	std::pair<bool, std::string> ReadEntireFile(const std::string &relative_path)override{
 		OFSTRUCT fo = {sizeof(fo)};
 		HANDLE file = (HANDLE)OpenFile((m_DirPath + relative_path).c_str(), &fo, 0);
 		if(!file)
@@ -144,7 +144,7 @@ public:
 		return {true, content};
 	}
 
-	bool WriteEntireFile(std::string relative_path, const void* data, size_t size)override{
+	bool WriteEntireFile(const std::string &relative_path, const void* data, size_t size)override{
 		OFSTRUCT fo = {sizeof(fo)};
 		HANDLE file = (HANDLE)OpenFile((m_DirPath + relative_path).c_str(), &fo, OF_CREATE);
 		if(!file)
@@ -156,6 +156,11 @@ public:
 		}
 		CloseHandle(file);
 		return true;
+	}
+
+	#undef DeleteFile
+	bool DeleteFile(const std::string &relative_path)override{
+		return DeleteFileA(relative_path.c_str()) != 0;
 	}
 };
 
