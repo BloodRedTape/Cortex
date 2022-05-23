@@ -85,3 +85,21 @@ std::string CommitHistory::ToBinary() const{
     
     return stream.str();
 }
+
+void ApplyCommitsToDir(Dir* dir, const std::vector<FileCommit> &commits) {
+    for (const auto &commit : commits) {
+        switch (commit.Action.Type) {
+        case FileActionType::Create: 
+        case FileActionType::Update:
+            //XXX: Handle failure
+            dir->WriteEntireFile(commit.Action.RelativeFilepath, commit.Content);
+            break;
+        case FileActionType::Delete:
+            //XXX: Handle failure
+            dir->DeleteFile(commit.Action.RelativeFilepath);
+            break;
+        default:
+            assert(false);
+        }
+    }
+}
