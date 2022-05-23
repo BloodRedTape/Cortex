@@ -6,7 +6,12 @@
 
 using DirStateDiff = std::vector<FileAction>;
 
-struct DirState: std::vector<FileState> {
+struct FileMeta {
+	std::string RelativeFilepath;
+	UnixTime ModificationTime;
+};
+
+struct DirState: std::vector<FileMeta> {
 	DirState() = default;
 
 	DirState(DirState &&) = default;
@@ -19,13 +24,13 @@ struct DirState: std::vector<FileState> {
 
 	bool Has(const std::string &relative_filepath);
 
-	const FileState* Find(const std::string& relative_filepath)const;
+	const FileMeta* Find(const std::string& relative_filepath)const;
 
-	FileState* Find(const std::string& relative_filepath);
+	FileMeta* Find(const std::string& relative_filepath);
 
-	const FileState* Find(const FileState& other)const;
+	const FileMeta* Find(const FileMeta& other)const;
 
-	void Remove(FileState *state);
+	void Remove(FileMeta *state);
 
 	friend std::ostream &operator<<(std::ostream &stream, const DirState &state);
 

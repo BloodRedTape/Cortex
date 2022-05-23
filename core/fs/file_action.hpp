@@ -2,6 +2,7 @@
 #define CORTEX_FILE_ACTION_HPP
 
 #include <cassert>
+#include <vector>
 #include "serializer.hpp"
 #include "time.hpp"
 
@@ -70,5 +71,28 @@ struct Serializer<FileAction> {
 		};
 	}
 };
+
+class FileActionAccumulator: private std::vector<FileAction>{
+	using Super = std::vector<FileAction>;
+public:
+	void Add(FileAction action);
+	
+	using Super::begin;
+
+	using Super::end;
+};
+
+void FileActionAccumulator::Add(FileAction new_action){
+	bool is_added = false;
+	for (auto &action : *this) {
+		if (action.RelativeFilepath == new_action.RelativeFilepath) {
+			action.Type = new_action.Type;
+			is_added = true;
+			break;
+		}
+	}
+	if(!is_added)
+		Super::push_back(std::move(new_action));
+}
 
 #endif//CORTEX_FILE_ACTION_HPP

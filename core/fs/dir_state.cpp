@@ -21,27 +21,27 @@ std::istream& operator>>(std::istream& stream, DirState& state) {
 DirStateDiff DirState::GetDiffFrom(const DirState& old) {
 	DirStateDiff result;
 
-	for (const FileState& old_file : old) {
-		const FileState *it = this->Find(old_file);
+	for (const FileMeta& old_file : old) {
+		const FileMeta *it = this->Find(old_file);
 
 		const bool found = it != nullptr;
 
 		if (!found) { // We should check for deletion first to avoid strange order bugs
-			result.emplace_back(FileActionType::Delete, UnixTime(), old_file.RelativeFilepath);
+			result.emplace_back(FileActionType::Delete, old_file.RelativeFilepath);
 			continue;
 		}
 		
 		if (old_file.ModificationTime.Seconds != it->ModificationTime.Seconds) 
-			result.emplace_back(FileActionType::Update, it->ModificationTime, it->RelativeFilepath);
+			result.emplace_back(FileActionType::Write, it->RelativeFilepath);
 	}
 
-	for (const FileState& new_file : *this) {
-		const FileState *it = old.Find(new_file);
+	for (const FileMeta& new_file : *this) {
+		const FileMeta *it = old.Find(new_file);
 
 		const bool found = it != nullptr;
 
 		if (!found)
-			result.emplace_back(FileActionType::Create, new_file.ModificationTime, new_file.RelativeFilepath);
+			result.emplace_back(FileActionType::Write, new_file.RelativeFilepath);
 	}
 
 	return result;
@@ -50,22 +50,22 @@ DirStateDiff DirState::GetDiffFrom(const DirState& old) {
 bool DirState::Has(const std::string& relative_filepath) {
 	return Find(relative_filepath);
 }
-const FileState* DirState::Find(const std::string& relative_filepath)const {
-	for(const FileState &state: *this){
+const FileMeta* DirState::Find(const std::string& relative_filepath)const {
+	for(const FileMeta &state: *this){
 		if(state.RelativeFilepath == relative_filepath)
 			return &state;
 	}
 	return nullptr;
 }
-FileState* DirState::Find(const std::string& relative_filepath) {
-	return const_cast<FileState *>(const_cast<const DirState*>(this)->Find(relative_filepath));
+FileMeta* DirState::Find(const std::string& relative_filepath) {
+	return const_cast<FileMeta *>(const_cast<const DirState*>(this)->Find(relative_filepath));
 }
 
-const FileState* DirState::Find(const FileState& other)const{
+const FileMeta* DirState::Find(const FileMeta& other)const{
 	return Find(other.RelativeFilepath);
 }
 
-void DirState::Remove(FileState *state){
+void DirState::Remove(FileMeta *state){
 	assert(state >= data() && state < data() + size());
 	std::swap(back(), *state);
 	pop_back();

@@ -186,7 +186,7 @@ public:
 #if 0
 		auto dir_state = GetDirState();
 		
-		for (const FileState& file : dir_state) {
+		for (const FileMeta& file : dir_state) {
 			std::cout << file.RelativeFilepath << std::endl;
 			std::cout << '\t' << file.ModificationTime.Seconds << std::endl;
 		}

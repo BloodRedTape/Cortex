@@ -11,7 +11,6 @@ inline void hash_combine(std::size_t& seed, const T& v)
 
 Hash::Hash(const Commit& commit) {
     hash_combine(Data64[0], (int)commit.Action.Type);
-    hash_combine(Data64[0], commit.Action.ModificationTime.Seconds);
     hash_combine(Data64[1], commit.Action.RelativeFilepath);
     hash_combine(Data64[0], commit.Previous.Data64[0]);
     hash_combine(Data64[1], commit.Previous.Data64[1]);
@@ -56,17 +55,12 @@ DirState CommitHistory::TraceDirState()const {
 
     for (const Commit& commit : *this) {
         switch (commit.Action.Type) {
-        case FileActionType::Create: {
+        case FileActionType::Write: {
             assert(!state.Has(commit.Action.RelativeFilepath));
-            state.push_back(commit.Action);
-        }break;
-        case FileActionType::Update: {
-            FileState *file_state = state.Find(commit.Action.RelativeFilepath);
-            assert(file_state);
-            file_state->ModificationTime = commit.Action.ModificationTime;
+            state.emplace_back(commit.Action.RelativeFilepath, commit.Action.ModificationTime);
         }break;
         case FileActionType::Delete: {
-            FileState *file_state = state.Find(commit.Action.RelativeFilepath);
+            FileMeta *file_state = state.Find(commit.Action.RelativeFilepath);
             assert(file_state);
             state.Remove(file_state);
         }break;
