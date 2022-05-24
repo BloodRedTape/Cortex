@@ -35,7 +35,9 @@ struct PullRequest {
 };
 
 struct PushRequest {
-	std::vector<FileCommit> Commits;
+	Hash TopHash;
+	std::vector<FileAction> Actions;
+	std::vector<FileData> ResultingFiles;
 };
 
 struct Request {
@@ -54,7 +56,11 @@ struct Request {
 
 	Request(PushRequest request):
 		Type(RequestType::Push),
-		Content(StringSerializer<std::vector<FileCommit>>::Serialize(request.Commits))
+		Content(
+			StringSerializer<Hash>::Serialize(request.TopHash) +
+			StringSerializer<std::vector<FileAction>>::Serialize(request.Actions) +
+			StringSerializer<std::vector<FileData>>::Serialize(request.ResultingFiles)
+		)
 	{}
 
 	PullRequest AsPullRequest()const{
@@ -67,7 +73,13 @@ struct Request {
 	PushRequest AsPushRequest()const {
 		assert(Type == RequestType::Push);
 
-		return {StringSerializer<std::vector<FileCommit>>::Deserialize(Content)};
+		std::stringstream stream(Content);
+
+		PushRequest push;
+		push.TopHash = Serializer<Hash>::Deserialize(stream);
+		push.Actions = Serializer<std::vector<FileAction>>::Deserialize(stream);
+		push.ResultingFiles = Serializer<std::vector<FileData>>::Deserialize(stream);
+		return push;
 	}
 	
 	bool Send(TcpSocket &socket)const{
@@ -108,10 +120,13 @@ enum class ResponceType: u32{
 };
 
 struct DiffResponce {
-	std::vector<FileCommit> Commits;
+	std::vector<Commit> Commits;
+	std::vector<FileData> ResultingFiles;
 };
 
-struct SuccessResponce { };
+struct SuccessResponce {
+	std::vector<Commit> Commits;
+};
 
 struct FailureResponce { };
 
@@ -124,8 +139,9 @@ struct Responce {
 		Content(content)
 	{}
 
-	Responce(SuccessResponce):
-		Type(ResponceType::Success)
+	Responce(SuccessResponce success):
+		Type(ResponceType::Success),
+		Content(StringSerializer<std::vector<Commit>>::Serialize(success.Commits))
 	{}
 
 	Responce(FailureResponce):
@@ -134,13 +150,27 @@ struct Responce {
 
 	Responce(DiffResponce diff):
 		Type(ResponceType::Diff),
-		Content(StringSerializer<std::vector<FileCommit>>::Serialize(diff.Commits))
+		Content(
+			StringSerializer<std::vector<Commit>>::Serialize(diff.Commits) +
+			StringSerializer<std::vector<FileData>>::Serialize(diff.ResultingFiles)
+		)
 	{}
 
 	DiffResponce AsDiffResponce()const {
 		assert(Type == ResponceType::Diff);
+		
+		std::stringstream stream(Content);
 
-		return {StringSerializer<std::vector<FileCommit>>::Deserialize(Content)};
+		DiffResponce diff;
+		diff.Commits = Serializer<std::vector<Commit>>::Deserialize(stream);
+		diff.ResultingFiles = Serializer<std::vector<FileData>>::Deserialize(stream);
+		return diff;
+	}
+
+	SuccessResponce AsSuccessResponce()const {
+		assert(Type == ResponceType::Success);
+
+		return {StringSerializer<std::vector<Commit>>::Deserialize(Content)};
 	}
 
 	bool Send(TcpSocket &socket)const{

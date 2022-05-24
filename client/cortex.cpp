@@ -42,6 +42,7 @@ std::optional<Responce> Transition(const Request &req, IpAddress address, u16 po
 	return resp;
 }
 
+
 Client::Client(std::string path, IpAddress server_address, u16 server_port):
 	m_RepositoryDir(
 		Dir::Create(std::move(path))
@@ -61,15 +62,38 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 void Client::OnDirChanged(FileAction action){
 	Println("FileChanged: %", action.RelativeFilepath);
 
-	//m_LocalChanges.Add(std::move(action));
-	//m_History.Add(std::move(action));
-#if 0
-	auto resp = Transition(PushRequest{{FileCommit(action, m_ClientState.History.HashLastCommit(), {})}}, m_ServerAddress, m_ServerPort);
+	m_ClientState.LocalChanges.Add(std::move(action));
 
-	if(!resp || resp->Type != ResponceType::Success)
-		Println("Transition failed");
-#endif
+	TryFlushLocalChanges();
+
 	m_RepositoryDir->WriteEntireFile(s_StateFilename, m_ClientState.ToBinary());
+}
+
+void Client::TryFlushLocalChanges() {
+	PushRequest push{
+		m_ClientState.History.HashLastCommit(),
+		m_ClientState.LocalChanges.ToVector(),
+		CollectFilesData(m_RepositoryDir.get(), m_ClientState.LocalChanges)
+	};
+
+	auto resp = Transition(push, m_ServerAddress, m_ServerPort);
+
+	if (!resp)
+		return (void)Error("Transition failed, response did not happened");
+	
+	if (resp->Type == ResponceType::Success) {
+		SuccessResponce success = resp->AsSuccessResponce();
+
+		for(Commit commit: success.Commits){
+			assert(commit.Previous == m_ClientState.History.HashLastCommit());
+			m_ClientState.History.Add(std::move(commit));
+		}
+
+		m_ClientState.LocalChanges.Clear();
+	} else {
+		assert(false);
+	}
+
 }
 
 void Client::Run(){

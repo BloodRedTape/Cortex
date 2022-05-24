@@ -4,6 +4,8 @@
 #include "net/tcp_listener.hpp"
 #include "error.hpp"
 
+constexpr const char *s_HistoryFilename = ".history";
+
 class Server {
 private:
 	DirRef RepoDir;
@@ -39,38 +41,35 @@ public:
 
 			if (req->Type == RequestType::Push) {
 				PushRequest push = req->AsPushRequest();
-				if (push.Commits.size()) {
-					if (push.Commits[0].Previous == History.HashLastCommit()){
-						ApplyCommits(std::move(push.Commits));
-						SendSuccess(connection);
-					}else{
-						SendDiffHistory(connection, push.Commits[0].Previous);
-					}
+				if (push.TopHash == History.HashLastCommit()) {
+					ApplyActionsToDir(RepoDir.get(), push.Actions, push.ResultingFiles);
+					History.Add(push.Actions);
+					SendSuccess(connection, History.CollectCommitsAfter(push.TopHash));
+				} else {
+					SendDiffHistory(connection, push.TopHash);
 				}
 			}
+
+			RepoDir->WriteEntireFile(s_HistoryFilename, History.ToBinary());
 		}
 	}
 
-	void ApplyCommits(std::vector<FileCommit> commits) {
-		// Broadcast changes
-		ApplyCommitsToDir(RepoDir.get(), commits);
-		
-		for (const auto &commit : commits)
-			History.Add(commit.Action);
-		RepoDir->WriteEntireFile(s_HistoryFilename, History.ToBinary());
-	}
-
 	void SendDiffHistory(TcpSocket &connection, Hash top_hash) {
+		std::vector<Commit> commits = History.CollectCommitsAfter(top_hash);
+		FileActionAccumulator accum;
+		for(const auto &commit: commits)
+			accum.Add(commit.Action);
+
 		DiffResponce resp;
-		for (auto commit : History)
-			resp.Commits.push_back({commit});
+		resp.ResultingFiles = CollectFilesData(RepoDir.get(), accum);
+		resp.Commits = std::move(commits);
 					
 		if(!Responce(resp).Send(connection))
 			Error("Disconnected during sending");
 	}
 
-	void SendSuccess(TcpSocket &socket) {
-		if(!Responce(SuccessResponce()).Send(socket))
+	void SendSuccess(TcpSocket &socket, std::vector<Commit> commits) {
+		if(!Responce(SuccessResponce{commits}).Send(socket))
 			Error("Disconnected during sending");
 	}
 };

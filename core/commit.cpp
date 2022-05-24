@@ -37,6 +37,15 @@ void CommitHistory::Add(FileAction action) {
     emplace_back(std::move(action), HashLastCommit());
 }
 
+void CommitHistory::Add(Commit commit) {
+    push_back(std::move(commit));
+}
+
+void CommitHistory::Add(const std::vector<FileAction>& actions){
+    for(const auto &action: actions)
+        Add(action);
+}
+
 void CommitHistory::Clear() {
     clear();
 }
@@ -50,6 +59,25 @@ Hash CommitHistory::HashLastCommit(){
 	return Hash(last);
 }
 
+size_t CommitHistory::FindNextCommitIndex(Hash commit_hash) const{
+    for (size_t i = 0; i < size(); i++) {
+        if(operator[](i).Previous == commit_hash)
+            return i;
+    }
+    return InvalidIndex;
+}
+
+std::vector<Commit> CommitHistory::CollectCommitsAfter(Hash commit_hash){
+    size_t index = FindNextCommitIndex(commit_hash);
+    
+    std::vector<Commit> result;
+
+    for (size_t i = index; i < size(); i++) 
+        result.push_back(operator[](i));
+
+    return result;
+}
+
 std::string CommitHistory::ToBinary() const{
     std::stringstream stream;
 
@@ -58,19 +86,28 @@ std::string CommitHistory::ToBinary() const{
     return stream.str();
 }
 
-void ApplyCommitsToDir(Dir* dir, const std::vector<FileCommit> &commits) {
-    for (const auto &commit : commits) {
-        switch (commit.Action.Type) {
-        case FileActionType::Write: 
+void ApplyActionsToDir(Dir *dir, const std::vector<FileAction> &actions, const std::vector<FileData> &files_data){
+    for (const FileAction &action: actions) 
+        if(action.Type == FileActionType::Delete) 
             //XXX: Handle failure
-            dir->WriteEntireFile(commit.Action.RelativeFilepath, commit.Content);
-            break;
-        case FileActionType::Delete:
-            //XXX: Handle failure
-            dir->DeleteFile(commit.Action.RelativeFilepath);
-            break;
-        default:
-            assert(false);
-        }
-    }
+            dir->DeleteFile(action.RelativeFilepath);
+
+    for (const FileData& file : files_data)
+        dir->WriteEntireFile(file.RelativeFilepath, file.Content);
+}
+
+std::vector<FileData> CollectFilesData(Dir *dir, const FileActionAccumulator& actions){
+	std::vector<FileData> result;
+		
+	for (const auto &action : actions) {
+		//XXX: Validate
+		result.push_back(
+			FileData{
+				action.RelativeFilepath, 
+				dir->ReadEntireFile(action.RelativeFilepath).second
+			}
+		);
+	}
+
+	return result;
 }

@@ -6,6 +6,25 @@
 #include "serializer.hpp"
 #include "time.hpp"
 
+struct FileData{
+	std::string RelativeFilepath;
+	std::string Content;
+};
+
+template <>
+struct Serializer<FileData>{
+	static void Serialize(std::ostream& stream, const FileData& value) {
+		Serializer<std::string>::Serialize(stream, value.RelativeFilepath);
+		Serializer<std::string>::Serialize(stream, value.Content);
+	}
+	static FileData Deserialize(std::istream& stream) {
+		FileData file;
+		file.RelativeFilepath = Serializer<std::string>::Deserialize(stream);
+		file.Content = Serializer<std::string>::Deserialize(stream);
+		return file;
+	}
+};
+
 enum class FileActionType: u32{
 	Write  = 1,
 	Delete = 2,
@@ -63,12 +82,39 @@ class FileActionAccumulator: private std::vector<FileAction>{
 private:
 	friend class Serializer<FileActionAccumulator>;
 public:
+	FileActionAccumulator() = default;
+
+	FileActionAccumulator(std::vector<FileAction> actions);
+
 	void Add(FileAction action);
 	
 	using Super::begin;
 
 	using Super::end;
+
+	std::vector<FileAction> ToVector()const {
+		return *this;
+	}
+
+	void Clear() {
+		Super::clear();
+	}
 };
+
+template<>
+struct Serializer<FileActionAccumulator> {
+	static void Serialize(std::ostream& stream, const FileActionAccumulator& value) {
+		Serializer<std::vector<FileAction>>::Serialize(stream, value);
+	}
+	static FileActionAccumulator Deserialize(std::istream& stream) {
+		return {Serializer<std::vector<FileAction>>::Deserialize(stream)};
+	}
+};
+
+inline FileActionAccumulator::FileActionAccumulator(std::vector<FileAction> actions){
+	for (auto action : actions)
+		Add(action);
+}
 
 inline void FileActionAccumulator::Add(FileAction new_action){
 	bool is_added = false;

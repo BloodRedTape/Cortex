@@ -32,5 +32,7 @@ public:
 	virtual void OnDirChanged(FileAction action);
 
 	void Run();
+private:
+	void TryFlushLocalChanges();
 };
 

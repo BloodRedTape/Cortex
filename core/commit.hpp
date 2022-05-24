@@ -79,35 +79,9 @@ struct Serializer<Commit>{
 	}
 };
 
-struct FileCommit: Commit{
-	std::string Content;
-
-	FileCommit(FileAction action, Hash previous, std::string content):
-		Commit(std::move(action), previous),
-		Content(content)
-	{}
-
-	FileCommit(Commit commit, std::string content = {}):
-		Commit(std::move(commit)),
-		Content(std::move(content))
-	{}
-};
-
-template <>
-struct Serializer<FileCommit>{
-	static void Serialize(std::ostream& stream, const FileCommit& value) {
-		Serializer<Commit>::Serialize(stream, value);
-		Serializer<std::string>::Serialize(stream, value.Content);
-	}
-
-	static FileCommit Deserialize(std::istream& stream) {
-		Commit commit = Serializer<Commit>::Deserialize(stream);
-		std::string content = Serializer<std::string>::Deserialize(stream);
-		return FileCommit(std::move(commit.Action), commit.Previous, std::move(content));
-	}
-};
-
 class CommitHistory : private std::vector<Commit>{
+public:
+	static constexpr size_t InvalidIndex = -1;
 private:
 	friend class Serializer<CommitHistory>;
 public:
@@ -121,9 +95,17 @@ public:
 
 	void Add(FileAction action);
 
+	void Add(Commit commit);
+
+	void Add(const std::vector<FileAction> &actions);
+
 	void Clear();
 
 	Hash HashLastCommit();
+
+	size_t FindNextCommitIndex(Hash commit_hash)const;
+
+	std::vector<Commit> CollectCommitsAfter(Hash commit_hash);
 
 	std::string ToBinary()const;
 	
@@ -150,7 +132,10 @@ struct Serializer<CommitHistory>{
 	}
 };
 
-extern void ApplyCommitsToDir(Dir *dir, const std::vector<FileCommit> &commits);
+extern void ApplyActionsToDir(Dir *dir, const std::vector<FileAction> &actions, const std::vector<FileData> &files_data);
+
+extern std::vector<FileData> CollectFilesData(Dir *dir, const FileActionAccumulator& actions);
+
 
 
 #endif//CORTEX_COMMIT_HPP
