@@ -13,6 +13,8 @@ struct UnixTime {
 	bool operator!=(UnixTime other)const{
 		return !(*this == other);
 	}
+
+	static UnixTime CurrentTime();
 };
 
 template <>
