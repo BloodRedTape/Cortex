@@ -14,9 +14,9 @@ public:
 public:
 	virtual ~DirWatcher() = default;
 
-	virtual bool DispatchChanges() = 0;
-	
-	static DirWatcherRef Create(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list = {}, DirState initial_state = {}, bool is_blocking = true);
+	virtual bool WaitAndDispatchChanges() = 0;
+
+	static DirWatcherRef Create(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list = {});
 };
 
 #endif//CORTEX_DIR_WATCHER_HPP

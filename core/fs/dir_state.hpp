@@ -9,6 +9,11 @@ using DirStateDiff = std::vector<FileAction>;
 struct FileMeta {
 	std::string RelativeFilepath;
 	UnixTime ModificationTime;
+
+	FileMeta(std::string path, UnixTime time):
+		RelativeFilepath(std::move(path)),
+		ModificationTime(std::move(time))
+	{}
 };
 
 struct DirState: std::vector<FileMeta> {
@@ -29,6 +34,8 @@ struct DirState: std::vector<FileMeta> {
 	FileMeta* Find(const std::string& relative_filepath);
 
 	const FileMeta* Find(const FileMeta& other)const;
+
+	void Apply(const FileAction &action, UnixTime action_time);
 
 	void Remove(FileMeta *state);
 

@@ -50,28 +50,6 @@ Hash CommitHistory::HashLastCommit(){
 	return Hash(last);
 }
 
-DirState CommitHistory::TraceDirState()const {
-    DirState state;
-
-    for (const Commit& commit : *this) {
-        switch (commit.Action.Type) {
-        case FileActionType::Write: {
-            assert(!state.Has(commit.Action.RelativeFilepath));
-            state.emplace_back(commit.Action.RelativeFilepath, commit.Action.ModificationTime);
-        }break;
-        case FileActionType::Delete: {
-            FileMeta *file_state = state.Find(commit.Action.RelativeFilepath);
-            assert(file_state);
-            state.Remove(file_state);
-        }break;
-        default:
-            assert(false);
-        }
-    }
-
-    return state;
-}
-
 std::string CommitHistory::ToBinary() const{
     std::stringstream stream;
 
@@ -83,8 +61,7 @@ std::string CommitHistory::ToBinary() const{
 void ApplyCommitsToDir(Dir* dir, const std::vector<FileCommit> &commits) {
     for (const auto &commit : commits) {
         switch (commit.Action.Type) {
-        case FileActionType::Create: 
-        case FileActionType::Update:
+        case FileActionType::Write: 
             //XXX: Handle failure
             dir->WriteEntireFile(commit.Action.RelativeFilepath, commit.Content);
             break;

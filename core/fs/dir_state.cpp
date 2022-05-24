@@ -65,6 +65,21 @@ const FileMeta* DirState::Find(const FileMeta& other)const{
 	return Find(other.RelativeFilepath);
 }
 
+void DirState::Apply(const FileAction& action, UnixTime action_time){
+	if(action.Type == FileActionType::Write){
+		FileMeta *meta = Find(action.RelativeFilepath);
+
+		if(!meta){
+			emplace_back(action.RelativeFilepath, action_time);
+			meta = &back();
+		}
+
+		meta->ModificationTime = action_time;
+	}else if (action.Type == FileActionType::Delete) {
+		Remove(Find(action.RelativeFilepath));
+	}else assert(false);
+}
+
 void DirState::Remove(FileMeta *state){
 	assert(state >= data() && state < data() + size());
 	std::swap(back(), *state);

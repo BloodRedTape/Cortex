@@ -5,6 +5,10 @@
 #include <iostream>
 #include <algorithm>
 #include <fstream>
+#include <thread>
+#include <chrono>
+
+using namespace std::literals::chrono_literals;
 
 #undef max
 
@@ -174,39 +178,34 @@ private:
 	OnDirChangedCallback m_Callback;
 	IgnoreList m_IgnoreList;
 	DirState m_LastState;
-	bool m_IsBlocking;
 public:
-	Win32DirWatcher(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list, DirState initial_state, bool is_blocking):
+	Win32DirWatcher(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list):
 		m_Dir(dir),
 		m_Callback(callback),
 		m_IgnoreList(std::move(ignore_list)),
-		m_LastState(std::move(initial_state)),
-		m_IsBlocking(is_blocking)
-	{
-#if 0
-		auto dir_state = GetDirState();
-		
-		for (const FileMeta& file : dir_state) {
-			std::cout << file.RelativeFilepath << std::endl;
-			std::cout << '\t' << file.ModificationTime.Seconds << std::endl;
-		}
-#endif
-	}
+		m_LastState(m_Dir->GetDirState())
+	{}
 
-	bool DispatchChanges()override{
-		DirState current_state = m_Dir->GetDirState();
+	bool WaitAndDispatchChanges()override{
+		int diff_size = 0;
+		for(;;){
+			DirState current_state = m_Dir->GetDirState();
 
-		DirStateDiff diff = current_state.GetDiffFrom(m_LastState);
+			DirStateDiff diff = current_state.GetDiffFrom(m_LastState);
+			diff_size = diff.size();
 
-		if (!diff.size()) 
-			return false;
+			if(!diff_size){
+				std::this_thread::sleep_for(1s);
+				continue;
+			}
 
-		for (const FileAction& action : diff){
-			if(!m_IgnoreList.ShouldBeIgnored(action.RelativeFilepath))
-				m_Callback(action);
-		}
+			for (const FileAction& action : diff){
+				if(!m_IgnoreList.ShouldBeIgnored(action.RelativeFilepath))
+					m_Callback(action);
+			}
 
-		m_LastState = std::move(current_state);
+			m_LastState = std::move(current_state);
+		}while(!diff_size);
 
 		return true;
 	}
@@ -216,6 +215,6 @@ public:
 
 
 
-DirWatcherRef DirWatcher::Create(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list, DirState initial_state, bool is_blocking) {
-	return std::make_unique<Win32DirWatcher>(dir, callback, std::move(ignore_list), std::move(initial_state), is_blocking);
+DirWatcherRef DirWatcher::Create(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list) {
+	return std::make_unique<Win32DirWatcher>(dir, callback, std::move(ignore_list));
 }

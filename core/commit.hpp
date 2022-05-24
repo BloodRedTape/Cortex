@@ -125,8 +125,6 @@ public:
 
 	Hash HashLastCommit();
 
-	DirState TraceDirState()const;
-
 	std::string ToBinary()const;
 	
 	using std::vector<Commit>::begin;

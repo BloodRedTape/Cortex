@@ -1,5 +1,4 @@
-﻿#include "repository.hpp"
-#include "protocol.hpp"
+﻿#include "protocol.hpp"
 #include "fs/dir.hpp"
 #include "commit.hpp"
 #include "net/tcp_listener.hpp"
@@ -17,13 +16,9 @@ public:
 			Dir::Create(std::move(path))
 		),
 		History(
-			RepoDir->ReadEntireFile(".history").second
+			RepoDir->ReadEntireFile(s_HistoryFilename).second
 		)
 	{}
-
-	~Server() {
-		RepoDir->WriteEntireFile(".history", History.ToBinary());
-	}
 
 	void Run() {
 		Listener.Bind(IpAddress::Any, 25565);
@@ -32,31 +27,51 @@ public:
 			IpAddress remote_address = connection.RemoteIpAddress();
 			u16       remote_port    = connection.RemotePort();
 
-			TransitionProtocolHeader header;
-
-			u32 received = connection.Receive(&header, sizeof(header));
+			std::optional<Request> req = Request::Receive(connection);
 			
-			Info("[%:%]: Got % bytes", remote_address, remote_port, received);
-			if(!received || !connection.IsConnected()){
-				Warning("[%:%]: Disconnected during receiving", remote_address, remote_port);
+			if (!req){
+				Error("Disconnected during receiving");
 				continue;
 			}
 
-			if(header.MagicWord != TransitionMagicWord){
-				Warning("[%:%]: Corrupted data", remote_address, remote_port);
-				continue;
-			}
+			if (req->Type == RequestType::Pull)
+				SendDiffHistory(connection, req->AsPullRequest().TopHash);
 
-			HandleTransition(std::move(connection));
+			if (req->Type == RequestType::Push) {
+				PushRequest push = req->AsPushRequest();
+				if (push.Commits.size()) {
+					if (push.Commits[0].Previous == History.HashLastCommit()){
+						ApplyCommits(std::move(push.Commits));
+						SendSuccess(connection);
+					}else{
+						SendDiffHistory(connection, push.Commits[0].Previous);
+					}
+				}
+			}
 		}
 	}
 
-	void HandleTransition(TcpSocket transition) {
-		IpAddress remote_address = transition.RemoteIpAddress();
-		u16       remote_port    = transition.RemotePort();
-		Info("[%:%]: TransitionStarted", remote_address, remote_port);
+	void ApplyCommits(std::vector<FileCommit> commits) {
+		// Broadcast changes
+		ApplyCommitsToDir(RepoDir.get(), commits);
+		
+		for (const auto &commit : commits)
+			History.Add(commit.Action);
+		RepoDir->WriteEntireFile(s_HistoryFilename, History.ToBinary());
+	}
 
-		Info("[%:%]: TransitionFinished", remote_address, remote_port);
+	void SendDiffHistory(TcpSocket &connection, Hash top_hash) {
+		DiffResponce resp;
+		for (auto commit : History)
+			resp.Commits.push_back({commit});
+					
+		if(!Responce(resp).Send(connection))
+			Error("Disconnected during sending");
+	}
+
+	void SendSuccess(TcpSocket &socket) {
+		if(!Responce(SuccessResponce()).Send(socket))
+			Error("Disconnected during sending");
 	}
 };
 
