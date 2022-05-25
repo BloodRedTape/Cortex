@@ -148,7 +148,41 @@ public:
 		return {true, content};
 	}
 
+	static bool DirExists(const std::string& dir_path)
+	{
+		DWORD ftyp = GetFileAttributesA(dir_path.c_str());
+		if (ftyp == INVALID_FILE_ATTRIBUTES)
+			return false;
+
+		if (ftyp & FILE_ATTRIBUTE_DIRECTORY)
+			return true;
+
+		return false;
+	}
+
+	bool CreateDirectories(std::string relative_path) {
+		size_t dir_name_begin = 0;
+		
+		for (size_t i = dir_name_begin; i < relative_path.size(); i++) {
+			if (relative_path[i] == '\\') {
+				relative_path[i] = 0;
+
+				std::string full_subpath = m_DirPath + &relative_path[dir_name_begin];
+				
+				if(!DirExists(full_subpath))
+					if(!CreateDirectoryA(full_subpath.c_str(), nullptr))
+						return false;
+
+				dir_name_begin = i + 1;
+			}
+		}
+		return true;
+	}
+
 	bool WriteEntireFile(const std::string &relative_path, const void* data, size_t size)override{
+		if(!CreateDirectories(relative_path))
+			return false;
+
 		OFSTRUCT fo = {sizeof(fo)};
 		HANDLE file = (HANDLE)OpenFile((m_DirPath + relative_path).c_str(), &fo, OF_CREATE);
 		if(!file)
