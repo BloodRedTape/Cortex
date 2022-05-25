@@ -11,6 +11,7 @@ constexpr const char *s_HistoryFilename= ".history";
 
 class Client {
 private:
+	const IgnoreList m_IgnoreList;
 	EventPipe m_Pipe;
 	DirRef m_RepositoryDir;
 

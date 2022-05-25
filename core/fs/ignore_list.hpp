@@ -19,13 +19,17 @@ public:
 
 	IgnoreList(IgnoreList &&) = default;
 
+	IgnoreList(const IgnoreList &) = default;
+
 	IgnoreList &operator=(IgnoreList &&) = default;
+
+	IgnoreList &operator=(const IgnoreList &) = default;
 
 	void Add(std::regex regex) {
 		m_Ignorers.push_back(std::move(regex));
 	}
 
-	bool ShouldBeIgnored(const std::string& item) {
+	bool ShouldBeIgnored(const std::string& item) const{
 		for (const std::regex& regex : m_Ignorers) {
 			if(std::regex_match(item, regex))
 				return true;

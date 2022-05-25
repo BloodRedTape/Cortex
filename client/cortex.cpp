@@ -25,6 +25,7 @@ std::optional<Responce> Transition(const Request &req, IpAddress address, u16 po
 }
 
 Client::Client(std::string path, IpAddress server_address, u16 server_port):
+	m_IgnoreList({std::regex(s_HistoryFilename)}),
 	m_RepositoryDir(
 		Dir::Create(std::move(path))
 	),
@@ -32,8 +33,11 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 	m_ServerAddress(server_address),
 	m_ServerPort(server_port)
 {
-	DirState state = m_RepositoryDir->GetDirState();
-
+	DirStateDiff diff = m_RepositoryDir->GetDirState().GetDiffFrom(m_History.TraceDirState());
+	for(const FileAction &action: diff){
+		if(!m_IgnoreList.ShouldBeIgnored(action.RelativeFilepath))
+			OnDirChanged(action);
+	}
 
 	auto watcher_callback = [this](FileAction action) {
 		m_Pipe.PushEvent(action);
@@ -42,7 +46,7 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 	m_DirWatcher = DirWatcher::Create(
 		m_RepositoryDir.get(),
 		watcher_callback,
-		{std::regex(s_HistoryFilename)}
+		m_IgnoreList
 	);
 
 	m_DirWatcherThread = std::thread([this]() {
