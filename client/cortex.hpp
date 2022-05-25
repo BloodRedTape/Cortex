@@ -5,24 +5,15 @@
 #include "commit.hpp"
 #include "fs/dir_watcher.hpp"
 
-constexpr const char *s_StateFilename= ".state";
-
-struct ClientState {
-	CommitHistory History;
-	FileActionAccumulator LocalChanges;
-	DirState CurrentDirState;
-
-	ClientState(std::string binary);
-
-	std::string ToBinary()const;
-};
+constexpr const char *s_HistoryFilename= ".history";
 
 class Client {
 private:
 	DirRef m_RepositoryDir;
 	DirWatcherRef m_DirWatcher;
 
-	ClientState m_ClientState;
+	CommitHistory m_History;
+	FileActionAccumulator m_LocalChanges;
 
 	IpAddress m_ServerAddress;
 	u16 m_ServerPort = 0;

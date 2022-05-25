@@ -27,12 +27,12 @@ DirStateDiff DirState::GetDiffFrom(const DirState& old) {
 		const bool found = it != nullptr;
 
 		if (!found) { // We should check for deletion first to avoid strange order bugs
-			result.emplace_back(FileActionType::Delete, old_file.RelativeFilepath);
+			result.emplace_back(FileActionType::Delete, UnixTime{0}, old_file.RelativeFilepath);
 			continue;
 		}
 		
 		if (old_file.ModificationTime.Seconds != it->ModificationTime.Seconds) 
-			result.emplace_back(FileActionType::Write, it->RelativeFilepath);
+			result.emplace_back(FileActionType::Write, it->ModificationTime, it->RelativeFilepath);
 	}
 
 	for (const FileMeta& new_file : *this) {
@@ -41,7 +41,7 @@ DirStateDiff DirState::GetDiffFrom(const DirState& old) {
 		const bool found = it != nullptr;
 
 		if (!found)
-			result.emplace_back(FileActionType::Write, new_file.RelativeFilepath);
+			result.emplace_back(FileActionType::Write, new_file.ModificationTime, new_file.RelativeFilepath);
 	}
 
 	return result;

@@ -9,9 +9,8 @@ int main(int argc, char **argv) {
 		history_path = argv[1];
 	} else {
 		Warning("No .history path supplied, using default one");
-		history_path = "W:\\Dev\\Cortex\\out\\repo\\";
+		history_path = "W:\\Dev\\Cortex\\out\\server\\";
 	}
-
 
 	DirRef dir = Dir::Create(history_path);
 	auto res = dir->ReadEntireFile(".history");
@@ -26,11 +25,9 @@ int main(int argc, char **argv) {
 			commit.Previous,
 			FileActionTypeString(commit.Action.Type),
 			commit.Action.RelativeFilepath,
-			commit.Action.ModificationTime.Seconds
+			commit.Action.Time.Seconds
 		);
 	}
-
-	const volatile int money = 34;
 
 	return 0;
 }

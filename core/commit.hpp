@@ -101,6 +101,8 @@ public:
 
 	void Clear();
 
+	DirState TraceDirState()const;
+
 	Hash HashLastCommit();
 
 	size_t FindNextCommitIndex(Hash commit_hash)const;

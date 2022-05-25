@@ -8,24 +8,6 @@
 #include "protocol.hpp"
 #include "error.hpp"
 
-
-ClientState::ClientState(std::string binary){
-	std::stringstream stream(binary);
-	History = Serializer<CommitHistory>::Deserialize(stream);
-	LocalChanges = Serializer<FileActionAccumulator>::Deserialize(stream);
-	CurrentDirState = Serializer<DirState>::Deserialize(stream);
-}
-
-std::string ClientState::ToBinary() const{
-	std::stringstream stream;
-
-	Serializer<CommitHistory>::Serialize(stream, History);
-	Serializer<FileActionAccumulator>::Serialize(stream, LocalChanges);
-	Serializer<DirState>::Serialize(stream, CurrentDirState);
-
-	return stream.str();
-}
-
 std::optional<Responce> Transition(const Request &req, IpAddress address, u16 port) {
 	TcpSocket socket;
 	if(!socket.Connect(address, port))
@@ -47,12 +29,12 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 	m_RepositoryDir(
 		Dir::Create(std::move(path))
 	),
-	m_ClientState(m_RepositoryDir->ReadEntireFile(s_StateFilename).second),
+	m_History(m_RepositoryDir->ReadEntireFile(s_HistoryFilename).second),
 	m_DirWatcher(
 		DirWatcher::Create(
 			m_RepositoryDir.get(),
 			std::bind(&Client::OnDirChanged, this, std::placeholders::_1), 
-			{std::regex(s_StateFilename)}
+			{std::regex(s_HistoryFilename)}
 		)
 	),
 	m_ServerAddress(server_address),
@@ -62,18 +44,18 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 void Client::OnDirChanged(FileAction action){
 	Println("FileChanged: %", action.RelativeFilepath);
 
-	m_ClientState.LocalChanges.Add(std::move(action));
+	m_LocalChanges.Add(std::move(action));
 
 	TryFlushLocalChanges();
 
-	m_RepositoryDir->WriteEntireFile(s_StateFilename, m_ClientState.ToBinary());
+	m_RepositoryDir->WriteEntireFile(s_HistoryFilename, m_History.ToBinary());
 }
 
 void Client::TryFlushLocalChanges() {
 	PushRequest push{
-		m_ClientState.History.HashLastCommit(),
-		m_ClientState.LocalChanges.ToVector(),
-		CollectFilesData(m_RepositoryDir.get(), m_ClientState.LocalChanges)
+		m_History.HashLastCommit(),
+		m_LocalChanges.ToVector(),
+		CollectFilesData(m_RepositoryDir.get(), m_LocalChanges)
 	};
 
 	auto resp = Transition(push, m_ServerAddress, m_ServerPort);
@@ -85,11 +67,11 @@ void Client::TryFlushLocalChanges() {
 		SuccessResponce success = resp->AsSuccessResponce();
 
 		for(Commit commit: success.Commits){
-			assert(commit.Previous == m_ClientState.History.HashLastCommit());
-			m_ClientState.History.Add(std::move(commit));
+			assert(commit.Previous == m_History.HashLastCommit());
+			m_History.Add(std::move(commit));
 		}
 
-		m_ClientState.LocalChanges.Clear();
+		m_LocalChanges.Clear();
 	} else {
 		assert(false);
 	}

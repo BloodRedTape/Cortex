@@ -51,11 +51,13 @@ inline const char* FileActionTypeString(FileActionType type) {
 }
 
 struct FileAction{ 
-	FileActionType Type;
-	std::string RelativeFilepath;
+	FileActionType	Type;
+	UnixTime		Time;
+	std::string		RelativeFilepath;
 
-	FileAction(FileActionType type, std::string relative_filepath):
+	FileAction(FileActionType type, UnixTime time, std::string relative_filepath):
 		Type(type),
+		Time(time),
 		RelativeFilepath(std::move(relative_filepath))
 	{}
 };
@@ -64,14 +66,17 @@ template<>
 struct Serializer<FileAction> {
 	static void Serialize(std::ostream& stream, const FileAction& value) {
 		Serializer<FileActionType>::Serialize(stream, value.Type);
+		Serializer<UnixTime>::Serialize(stream, value.Time);
 		Serializer<std::string>::Serialize(stream, value.RelativeFilepath);
 	}
 	static FileAction Deserialize(std::istream& stream) {
 		FileActionType type  = Serializer<FileActionType>::Deserialize(stream);
+		UnixTime time		 = Serializer<UnixTime>::Deserialize(stream);
 		std::string rel_path = Serializer<std::string>::Deserialize(stream);
 
 		return {
 			type, 
+			time,
 			std::move(rel_path)
 		};
 	}

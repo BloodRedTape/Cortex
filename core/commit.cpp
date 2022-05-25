@@ -50,6 +50,28 @@ void CommitHistory::Clear() {
     clear();
 }
 
+DirState CommitHistory::TraceDirState() const{
+    DirState state;
+
+    for (const Commit& commit : *this) {
+        switch (commit.Action.Type) {
+        case FileActionType::Write: {
+            assert(!state.Has(commit.Action.RelativeFilepath));
+            state.emplace_back(commit.Action.RelativeFilepath, commit.Action.Time);
+        }break;
+        case FileActionType::Delete: {
+            FileMeta *file_state = state.Find(commit.Action.RelativeFilepath);
+            assert(file_state);
+            state.Remove(file_state);
+        }break;
+        default:
+            assert(false);
+        }
+    }
+
+    return state;
+}
+
 Hash CommitHistory::HashLastCommit(){
 	if (!size()) 
 		return Hash();
