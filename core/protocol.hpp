@@ -16,6 +16,7 @@ struct TransitionProtocolHeader {
 };
 
 constexpr u64 BroadcastMagicWord = 0xBB4400AAAA0044BB;
+constexpr u16 BroadcastListenPort = 10007;
 
 struct BroadcastProtocolHeader{
 	u64 MagicWord = BroadcastMagicWord;

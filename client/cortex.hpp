@@ -10,6 +10,8 @@
 
 constexpr const char *s_HistoryFilename= ".history";
 
+struct BroadcastEvent{ };
+
 class Client {
 private:
 	const IgnoreList m_IgnoreList;
@@ -18,7 +20,9 @@ private:
 	DirRef m_RepositoryDir;
 
 	DirWatcherRef m_DirWatcher;
+
 	std::thread m_DirWatcherThread;
+	std::thread m_BroadcastThread;
 
 	CommitHistory m_History;
 	FileActionAccumulator m_LocalChanges;
@@ -32,7 +36,7 @@ public:
 
 	void OnDirChanged(FileAction action);
 
-	void OnPullRequired();
+	void OnBroadcastEvent(BroadcastEvent);
 
 	void Run();
 private:

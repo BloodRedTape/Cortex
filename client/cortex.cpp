@@ -5,6 +5,7 @@
 #include "serializer.hpp"
 #include "fs/dir.hpp"
 #include "net/tcp_socket.hpp"
+#include "net/udp_socket.hpp"
 #include "protocol.hpp"
 #include "error.hpp"
 
@@ -46,10 +47,38 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 			m_DirWatcher->WaitAndDispatchChanges();
 		}
 	});
+
+	m_Pipe.RegisterEventType<FileAction>(std::bind(&Client::OnDirChanged, this, std::placeholders::_1));
+
+	m_BroadcastThread = std::thread([this]() {
+		UdpSocket socket;
+		if (!socket.Bind(IpAddress::Any, BroadcastListenPort)) {
+			m_IsRunning = false;
+			return Error("Can't bind to port '%' for broadcast listening", BroadcastListenPort);
+		}
+
+		while (m_IsRunning) {
+			BroadcastProtocolHeader header;
+			if (socket.Receive(&header, sizeof(header)) != sizeof(header)) {
+				Println("BroadcastThread: partial received");
+				continue;
+			}
+
+			if (header.MagicWord != BroadcastMagicWord) {
+				Println("BroadcastThread: broken broadcast header");
+				continue;
+			}
+			
+			m_Pipe.PushEvent(BroadcastEvent{});
+		}
+	});
+
+	m_Pipe.RegisterEventType<BroadcastEvent>(std::bind(&Client::OnBroadcastEvent, this, std::placeholders::_1));
 }
 
 Client::~Client(){
 	m_DirWatcherThread.join();
+	m_BroadcastThread.join();
 }
 
 void Client::OnDirChanged(FileAction action){
@@ -63,8 +92,9 @@ void Client::OnDirChanged(FileAction action){
 	TryFlushLocalChanges();
 }
 
-void Client::OnPullRequired(){
+void Client::OnBroadcastEvent(BroadcastEvent){
 	TryPullRemoteChanges();
+	TryFlushLocalChanges();
 }
 
 void Client::TryFlushLocalChanges() {
@@ -138,13 +168,11 @@ void Client::ApplyDiff(const DiffResponce& diff){
 }
 
 void Client::Run(){
-	m_Pipe.RegisterEventType<FileAction>(std::bind(&Client::OnDirChanged, this, std::placeholders::_1));
-
 	while(m_IsRunning) {
 		m_Pipe.WaitAndDispath();	
 	}
 }
 
-int main() {
+int main(int argc, char **argv) {
 	Client("W:\\Dev\\Cortex\\out\\client\\", IpAddress::Loopback, 25565).Run();
 }

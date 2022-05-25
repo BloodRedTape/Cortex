@@ -2,6 +2,7 @@
 #include "fs/dir.hpp"
 #include "commit.hpp"
 #include "net/tcp_listener.hpp"
+#include "net/udp_socket.hpp"
 #include "error.hpp"
 
 constexpr const char *s_HistoryFilename = ".history";
@@ -12,6 +13,7 @@ private:
 	CommitHistory History;
 
 	TcpListener Listener;
+	UdpSocket Broadcaster;
 public:
 	Server(std::string path):
 		RepoDir(
@@ -43,6 +45,7 @@ public:
 				PushRequest push = req->AsPushRequest();
 				if (push.TopHash == History.HashLastCommit()) {
 					ApplyActions(RepoDir.get(), History, push.Actions, push.ResultingFiles);
+					BroadcastChanges();
 					SendSuccess(connection, History.CollectCommitsAfter(push.TopHash));
 				} else {
 					SendDiffHistory(connection, push.TopHash);
@@ -70,6 +73,12 @@ public:
 	void SendSuccess(TcpSocket &socket, std::vector<Commit> commits) {
 		if(!Responce(SuccessResponce{commits}).Send(socket))
 			Error("Disconnected during sending");
+	}
+
+	void BroadcastChanges() {
+		BroadcastProtocolHeader header;
+		//XXX: Validation
+		Broadcaster.Send(&header, sizeof(header), IpAddress::ThisNetworkBroadcast, BroadcastListenPort);
 	}
 };
 
