@@ -19,6 +19,29 @@ u64 WindowsTickToUnixSeconds(u64 windowsTicks) {
      return (u64)(windowsTicks / WINDOWS_TICK - SEC_TO_UNIX_EPOCH);
 }
 
+u64 UnixSecondsToWindowsTicks(u64 unix_seconds) {
+     return (u64)((unix_seconds + SEC_TO_UNIX_EPOCH) * WINDOWS_TICK);
+}
+
+u64 WindowsFileTimeToUnixSeconds(const FILETIME &filetime) {
+	ULARGE_INTEGER time = {};
+
+	time.LowPart = filetime.dwLowDateTime;
+	time.HighPart= filetime.dwHighDateTime;
+
+	return {WindowsTickToUnixSeconds(time.QuadPart)};
+}
+
+FILETIME UnixSecondsToWindowsFileTime(u64 unix_seconds) {
+	LARGE_INTEGER time;
+	time.QuadPart = UnixSecondsToWindowsTicks(unix_seconds);
+	
+	FILETIME result;
+	result.dwHighDateTime = time.HighPart;
+	result.dwLowDateTime = time.LowPart;
+	return result;
+}
+
 struct DirIt {
 	HANDLE CurrentFile = INVALID_HANDLE_VALUE;
 	WIN32_FIND_DATAA CurrentFileMetadata = {};
@@ -45,12 +68,7 @@ struct DirIt {
 	}
 
 	UnixTime ModifiedTime()const {
-		ULARGE_INTEGER time = {};
-
-		time.LowPart = CurrentFileMetadata.ftLastWriteTime.dwLowDateTime;
-		time.HighPart= CurrentFileMetadata.ftLastWriteTime.dwHighDateTime;
-
-		return {WindowsTickToUnixSeconds(time.QuadPart)};
+		return {WindowsFileTimeToUnixSeconds(CurrentFileMetadata.ftLastWriteTime)};
 	}
 
 	const char* Name()const {
@@ -160,6 +178,14 @@ public:
 		return false;
 	}
 
+	static bool FileExists(const std::string &file_path)
+	{ 
+		DWORD dwAttrib = GetFileAttributesA(file_path.c_str());
+
+		return  (dwAttrib != INVALID_FILE_ATTRIBUTES
+			&& !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+	}
+
 	bool CreateDirectories(std::string relative_path) {
 		size_t dir_name_begin = 0;
 		
@@ -199,6 +225,46 @@ public:
 	#undef DeleteFile
 	bool DeleteFile(const std::string &relative_path)override{
 		return DeleteFileA(relative_path.c_str()) != 0;
+	}
+
+	std::optional<FileTime> GetFileTime(const std::string& relative_path)override {
+		std::string path = m_DirPath + relative_path;
+
+		if(!FileExists(path.c_str()))
+			return {};
+
+		HANDLE file = CreateFileA(path.c_str(), FILE_WRITE_ATTRIBUTES, 0, nullptr, OPEN_EXISTING, 0, 0);
+
+		if(file == INVALID_HANDLE_VALUE)
+			return {};
+
+		FILETIME created, modified;
+		if(!::GetFileTime(file, &created, nullptr, &modified))
+			return {};
+
+		
+		return {
+			FileTime{
+				UnixTime{WindowsFileTimeToUnixSeconds(created)},
+				UnixTime{WindowsFileTimeToUnixSeconds(modified)}
+			}
+		};
+	}
+
+	bool SetFileTime(const std::string& relative_path, FileTime time)override {
+		std::string path = m_DirPath + relative_path;
+		if(!FileExists(path.c_str()))
+			return false;
+
+		HANDLE file = CreateFileA(path.c_str(), FILE_WRITE_ATTRIBUTES, 0, nullptr, OPEN_EXISTING, 0, 0);
+
+		if(file == INVALID_HANDLE_VALUE)
+			return {};
+		
+		FILETIME created = UnixSecondsToWindowsFileTime(time.Created.Seconds);
+		FILETIME modified = UnixSecondsToWindowsFileTime(time.Modified.Seconds);
+
+		return ::SetFileTime(file, &created, nullptr, &modified);
 	}
 };
 

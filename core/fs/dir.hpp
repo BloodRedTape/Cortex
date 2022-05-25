@@ -2,9 +2,15 @@
 #define CORTEX_DIR_HPP
 
 #include <memory>
+#include <optional>
 #include "fs/dir_state.hpp"
 
 using DirRef = std::unique_ptr<class Dir>;
+
+struct FileTime {
+	UnixTime Created;
+	UnixTime Modified;
+};
 
 class Dir {
 public:
@@ -19,6 +25,10 @@ public:
 	bool WriteEntireFile(const std::string &relative_path, const std::string &content) {
 		return WriteEntireFile(relative_path, content.data(), content.size());
 	}
+
+	virtual std::optional<FileTime> GetFileTime(const std::string &relative_path) = 0;
+
+	virtual bool SetFileTime(const std::string &relative_path, FileTime time) = 0;
 
 	virtual bool DeleteFile(const std::string &relative_path) = 0;
 
