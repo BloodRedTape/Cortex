@@ -277,16 +277,14 @@ class Win32DirWatcher: public DirWatcher{
 private:
 	Dir *m_Dir = nullptr;
 	OnDirChangedCallback m_Callback;
-	IgnoreList m_IgnoreList;
 	DirState m_LastState;
 	bool m_IsEnabled = true;
 
 	std::mutex m_Lock;
 public:
-	Win32DirWatcher(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list):
+	Win32DirWatcher(Dir *dir, OnDirChangedCallback callback):
 		m_Dir(dir),
 		m_Callback(callback),
-		m_IgnoreList(std::move(ignore_list)),
 		m_LastState(m_Dir->GetDirState())
 	{}
 
@@ -308,10 +306,8 @@ public:
 				continue;
 			}
 
-			for (const FileAction& action : diff){
-				if(!m_IgnoreList.ShouldBeIgnored(action.RelativeFilepath))
-					m_Callback(action);
-			}
+			for (const FileAction& action : diff)
+				m_Callback(action);
 
 			m_LastState = std::move(current_state);
 		}while(!diff_size);
@@ -359,6 +355,6 @@ public:
 
 
 
-DirWatcherRef DirWatcher::Create(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list) {
-	return std::make_unique<Win32DirWatcher>(dir, callback, std::move(ignore_list));
+DirWatcherRef DirWatcher::Create(Dir *dir, OnDirChangedCallback callback) {
+	return std::make_unique<Win32DirWatcher>(dir, callback);
 }

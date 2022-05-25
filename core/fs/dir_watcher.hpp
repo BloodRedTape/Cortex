@@ -22,7 +22,7 @@ public:
 
 	virtual bool AcknowledgedSetFileTime(const std::string &filepath, FileTime time) = 0;
 
-	static DirWatcherRef Create(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list = {});
+	static DirWatcherRef Create(Dir *dir, OnDirChangedCallback callback);
 };
 
 #endif//CORTEX_DIR_WATCHER_HPP

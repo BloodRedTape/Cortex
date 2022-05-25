@@ -33,21 +33,13 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 	m_ServerAddress(server_address),
 	m_ServerPort(server_port)
 {
-	DirStateDiff diff = m_RepositoryDir->GetDirState().GetDiffFrom(m_History.TraceDirState());
-	for(const FileAction &action: diff){
-		if(!m_IgnoreList.ShouldBeIgnored(action.RelativeFilepath))
-			OnDirChanged(action);
-	}
 
-	auto watcher_callback = [this](FileAction action) {
+	for(const FileAction &action: m_RepositoryDir->GetDirState().GetDiffFrom(m_History.TraceDirState()))
+		OnDirChanged(action);
+
+	m_DirWatcher = DirWatcher::Create(m_RepositoryDir.get(), [this](FileAction action) {
 		m_Pipe.PushEvent(action);
-	};
-
-	m_DirWatcher = DirWatcher::Create(
-		m_RepositoryDir.get(),
-		watcher_callback,
-		m_IgnoreList
-	);
+	});
 
 	m_DirWatcherThread = std::thread([this]() {
 		for (;;) {
@@ -57,6 +49,9 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 }
 
 void Client::OnDirChanged(FileAction action){
+	if(m_IgnoreList.ShouldBeIgnored(action.RelativeFilepath))
+		return;
+
 	Println("FileChanged: %", action.RelativeFilepath);
 
 	m_LocalChanges.Add(std::move(action));
