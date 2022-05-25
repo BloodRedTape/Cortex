@@ -46,6 +46,13 @@ void CommitHistory::Add(const std::vector<FileAction>& actions){
         Add(action);
 }
 
+void CommitHistory::Add(const std::vector<Commit>& commits){
+    for(const Commit &commit: commits){
+        assert(commit.Previous == HashLastCommit());
+        Add(commit);
+    }
+}
+
 void CommitHistory::Clear() {
     clear();
 }
@@ -106,6 +113,18 @@ std::string CommitHistory::ToBinary() const{
     Serializer<CommitHistory>::Serialize(stream, *this);
     
     return stream.str();
+}
+
+void ApplyCommits(Dir* dir, CommitHistory& history, const std::vector<Commit>& commits, const std::vector<FileData>& files_data) {
+    //XXX: This shit should not copy entire thing
+    //ApplyCommits is called on the client, but ApplyActions hashes actions to make them commits,
+    //Hashing should be done on the server
+    std::vector<FileAction> actions;
+    actions.reserve(commits.size());
+    for (auto commit : commits)
+        actions.push_back(commit.Action);
+    
+    ApplyActions(dir, history, actions, files_data);
 }
 
 void ApplyActions(Dir *dir, CommitHistory &history, const std::vector<FileAction> &actions, const std::vector<FileData> &files_data){

@@ -99,6 +99,8 @@ public:
 
 	void Add(const std::vector<FileAction> &actions);
 
+	void Add(const std::vector<Commit>& actions);
+
 	void Clear();
 
 	DirState TraceDirState()const;
@@ -135,6 +137,7 @@ struct Serializer<CommitHistory>{
 };
 
 extern void ApplyActions(Dir *dir, CommitHistory &history, const std::vector<FileAction> &actions, const std::vector<FileData> &files_data);
+extern void ApplyCommits(Dir *dir, CommitHistory &history, const std::vector<Commit> &actions, const std::vector<FileData> &files_data);
 
 extern std::vector<FileData> CollectFilesData(Dir *dir, const FileActionAccumulator& actions);
 

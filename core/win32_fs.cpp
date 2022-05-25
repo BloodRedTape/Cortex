@@ -278,6 +278,7 @@ private:
 	OnDirChangedCallback m_Callback;
 	IgnoreList m_IgnoreList;
 	DirState m_LastState;
+	bool m_IsEnabled = true;
 public:
 	Win32DirWatcher(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list):
 		m_Dir(dir),
@@ -287,6 +288,9 @@ public:
 	{}
 
 	bool WaitAndDispatchChanges()override{
+		if(!m_IsEnabled)
+			return false;
+
 		int diff_size = 0;
 		for(;;){
 			DirState current_state = m_Dir->GetDirState();
@@ -310,7 +314,36 @@ public:
 		return true;
 	}
 
+	bool AcknowledgedWriteEntireFile(const std::string& filepath, const void* data, size_t size) {
+		bool is_created = !m_LastState.Has(filepath);
 
+		if(!m_Dir->WriteEntireFile(filepath, data, size))
+			return false;
+
+		if(is_created)
+			m_LastState.push_back({filepath, UnixTime{0}});
+
+		FileMeta *file = m_LastState.Find(filepath);
+
+		file->ModificationTime = m_Dir->GetFileTime(filepath)->Modified;
+
+		return true;
+	}
+
+	bool AcknowledgedDeleteFile(const std::string& filepath) {
+		m_LastState.Remove(m_LastState.Find(filepath));
+		return m_Dir->DeleteFile(filepath);
+	}
+
+	bool AcknowledgedSetFileTime(const std::string& filepath, FileTime time) {
+		FileMeta *file = m_LastState.Find(filepath);
+		if(!file)
+			return false;
+
+		file->ModificationTime = time.Modified;
+
+		return m_Dir->SetFileTime(filepath, time);
+	}
 };
 
 

@@ -1,16 +1,12 @@
 #include <iostream>
 #include <sstream>
 #include <optional>
-#include <thread>
-#include <chrono>
 #include "cortex.hpp"
 #include "serializer.hpp"
 #include "fs/dir.hpp"
 #include "net/tcp_socket.hpp"
 #include "protocol.hpp"
 #include "error.hpp"
-
-using namespace std::literals::chrono_literals;
 
 std::optional<Responce> Transition(const Request &req, IpAddress address, u16 port) {
 	TcpSocket socket;
@@ -43,7 +39,10 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 	),
 	m_ServerAddress(server_address),
 	m_ServerPort(server_port)
-{}
+{
+	TryPullRemoteChanges();
+	m_RepositoryDir->WriteEntireFile(s_HistoryFilename, m_History.ToBinary());
+}
 
 void Client::OnDirChanged(FileAction action){
 	Println("FileChanged: %", action.RelativeFilepath);
@@ -62,8 +61,6 @@ void Client::TryFlushLocalChanges() {
 		CollectFilesData(m_RepositoryDir.get(), m_LocalChanges)
 	};
 	
-	std::this_thread::sleep_for(120s);
-
 	auto resp = Transition(push, m_ServerAddress, m_ServerPort);
 
 	if (!resp)
@@ -71,17 +68,56 @@ void Client::TryFlushLocalChanges() {
 	
 	if (resp->Type == ResponceType::Success) {
 		SuccessResponce success = resp->AsSuccessResponce();
-
-		for(Commit commit: success.Commits){
-			assert(commit.Previous == m_History.HashLastCommit());
-			m_History.Add(std::move(commit));
-		}
+			
+		m_History.Add(success.Commits);
 
 		m_LocalChanges.Clear();
 	} else {
 		assert(false);
 	}
 
+}
+
+void Client::TryPullRemoteChanges() {
+	PullRequest pull{
+		m_History.HashLastCommit()
+	};
+
+	auto resp = Transition(pull, m_ServerAddress, m_ServerPort);
+
+	if (!resp)
+		return (void)Error("Transition failed, response did not happened");
+
+	if (resp->Type == ResponceType::Diff) {
+		DiffResponce diff = resp->AsDiffResponce();
+		
+		DirState state = m_History.TraceDirState();
+
+		for (const FileData& file : diff.ResultingFiles)
+			m_DirWatcher->AcknowledgedWriteEntireFile(file.RelativeFilepath, file.Content.data(), file.Content.size());
+
+		for (const Commit &commit: diff.Commits){
+			const FileAction &action = commit.Action;
+			if(action.Type == FileActionType::Delete) 
+				//XXX: Handle failure
+				m_DirWatcher->AcknowledgedDeleteFile(commit.Action.RelativeFilepath);
+			if (action.Type == FileActionType::Write) {
+				if (state.Has(action.RelativeFilepath)) {
+					m_DirWatcher->AcknowledgedSetFileTime(action.RelativeFilepath, {m_RepositoryDir->GetFileTime(action.RelativeFilepath)->Created, action.Time});
+				} else {
+					m_DirWatcher->AcknowledgedSetFileTime(action.RelativeFilepath, {action.Time, action.Time});
+				}
+			}
+        }
+
+		m_History.Add(diff.Commits);
+
+		for(const Commit &commit: diff.Commits)
+			m_LocalChanges.OverrideIfConflicted(commit.Action);
+
+	} else {
+		assert(false);
+	}
 }
 
 void Client::Run(){

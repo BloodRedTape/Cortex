@@ -104,6 +104,8 @@ public:
 	void Clear() {
 		Super::clear();
 	}
+
+	void OverrideIfConflicted(const FileAction &action);
 };
 
 template<>
@@ -132,6 +134,22 @@ inline void FileActionAccumulator::Add(FileAction new_action){
 	}
 	if(!is_added)
 		Super::push_back(std::move(new_action));
+}
+
+inline void FileActionAccumulator::OverrideIfConflicted(const FileAction &candidate){
+	FileAction *conflicted = nullptr;
+
+	for (FileAction &action : *this) {
+		if (action.RelativeFilepath == candidate.RelativeFilepath) {
+			conflicted = &action;
+			break;
+		}
+	}
+
+	if (conflicted) {
+		std::swap(*conflicted, Super::back());
+		Super::pop_back();
+	}
 }
 
 #endif//CORTEX_FILE_ACTION_HPP

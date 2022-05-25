@@ -16,6 +16,12 @@ public:
 
 	virtual bool WaitAndDispatchChanges() = 0;
 
+	virtual bool AcknowledgedWriteEntireFile(const std::string &filepath, const void *data, size_t size) = 0;
+
+	virtual bool AcknowledgedDeleteFile(const std::string &filepath) = 0;
+
+	virtual bool AcknowledgedSetFileTime(const std::string &filepath, FileTime time) = 0;
+
 	static DirWatcherRef Create(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list = {});
 };
 

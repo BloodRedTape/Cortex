@@ -25,5 +25,7 @@ public:
 	void Run();
 private:
 	void TryFlushLocalChanges();
+
+	void TryPullRemoteChanges();
 };
 
