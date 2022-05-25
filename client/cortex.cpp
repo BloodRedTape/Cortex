@@ -42,10 +42,14 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 	});
 
 	m_DirWatcherThread = std::thread([this]() {
-		for (;;) {
+		while (m_IsRunning) {
 			m_DirWatcher->WaitAndDispatchChanges();
 		}
 	});
+}
+
+Client::~Client(){
+	m_DirWatcherThread.join();
 }
 
 void Client::OnDirChanged(FileAction action){
@@ -136,7 +140,7 @@ void Client::ApplyDiff(const DiffResponce& diff){
 void Client::Run(){
 	m_Pipe.RegisterEventType<FileAction>(std::bind(&Client::OnDirChanged, this, std::placeholders::_1));
 
-	while(true) {
+	while(m_IsRunning) {
 		m_Pipe.WaitAndDispath();	
 	}
 }

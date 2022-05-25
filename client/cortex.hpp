@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include "utils.hpp"
 #include "net/ip.hpp"
 #include "commit.hpp"
@@ -12,6 +13,7 @@ constexpr const char *s_HistoryFilename= ".history";
 class Client {
 private:
 	const IgnoreList m_IgnoreList;
+	std::atomic<bool> m_IsRunning{true};
 	EventPipe m_Pipe;
 	DirRef m_RepositoryDir;
 
@@ -25,6 +27,8 @@ private:
 	u16 m_ServerPort = 0;
 public:
 	Client(std::string path, IpAddress server_address, u16 server_port);
+
+	~Client();
 
 	void OnDirChanged(FileAction action);
 
