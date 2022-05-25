@@ -1,12 +1,16 @@
 #include <iostream>
 #include <sstream>
 #include <optional>
+#include <thread>
+#include <chrono>
 #include "cortex.hpp"
 #include "serializer.hpp"
 #include "fs/dir.hpp"
 #include "net/tcp_socket.hpp"
 #include "protocol.hpp"
 #include "error.hpp"
+
+using namespace std::literals::chrono_literals;
 
 std::optional<Responce> Transition(const Request &req, IpAddress address, u16 port) {
 	TcpSocket socket;
@@ -57,6 +61,8 @@ void Client::TryFlushLocalChanges() {
 		m_LocalChanges.ToVector(),
 		CollectFilesData(m_RepositoryDir.get(), m_LocalChanges)
 	};
+	
+	std::this_thread::sleep_for(120s);
 
 	auto resp = Transition(push, m_ServerAddress, m_ServerPort);
 

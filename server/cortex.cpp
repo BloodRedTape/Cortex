@@ -42,8 +42,7 @@ public:
 			if (req->Type == RequestType::Push) {
 				PushRequest push = req->AsPushRequest();
 				if (push.TopHash == History.HashLastCommit()) {
-					ApplyActionsToDir(RepoDir.get(), push.Actions, push.ResultingFiles);
-					History.Add(push.Actions);
+					ApplyActions(RepoDir.get(), History, push.Actions, push.ResultingFiles);
 					SendSuccess(connection, History.CollectCommitsAfter(push.TopHash));
 				} else {
 					SendDiffHistory(connection, push.TopHash);

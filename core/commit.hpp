@@ -134,7 +134,7 @@ struct Serializer<CommitHistory>{
 	}
 };
 
-extern void ApplyActionsToDir(Dir *dir, const std::vector<FileAction> &actions, const std::vector<FileData> &files_data);
+extern void ApplyActions(Dir *dir, CommitHistory &history, const std::vector<FileAction> &actions, const std::vector<FileData> &files_data);
 
 extern std::vector<FileData> CollectFilesData(Dir *dir, const FileActionAccumulator& actions);
 

@@ -108,14 +108,26 @@ std::string CommitHistory::ToBinary() const{
     return stream.str();
 }
 
-void ApplyActionsToDir(Dir *dir, const std::vector<FileAction> &actions, const std::vector<FileData> &files_data){
-    for (const FileAction &action: actions) 
-        if(action.Type == FileActionType::Delete) 
-            //XXX: Handle failure
-            dir->DeleteFile(action.RelativeFilepath);
+void ApplyActions(Dir *dir, CommitHistory &history, const std::vector<FileAction> &actions, const std::vector<FileData> &files_data){
+    DirState state = history.TraceDirState();
 
     for (const FileData& file : files_data)
         dir->WriteEntireFile(file.RelativeFilepath, file.Content);
+
+    for (const FileAction &action: actions){
+        if(action.Type == FileActionType::Delete) 
+            //XXX: Handle failure
+            dir->DeleteFile(action.RelativeFilepath);
+        if (action.Type == FileActionType::Write) {
+            if (state.Has(action.RelativeFilepath)) {
+                dir->SetFileTime(action.RelativeFilepath, {dir->GetFileTime(action.RelativeFilepath)->Created, action.Time});
+            } else {
+                dir->SetFileTime(action.RelativeFilepath, {action.Time, action.Time});
+            }
+        }
+    }
+
+    history.Add(actions);
 }
 
 std::vector<FileData> CollectFilesData(Dir *dir, const FileActionAccumulator& actions){
