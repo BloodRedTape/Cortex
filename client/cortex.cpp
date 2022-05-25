@@ -24,24 +24,32 @@ std::optional<Responce> Transition(const Request &req, IpAddress address, u16 po
 	return resp;
 }
 
-
 Client::Client(std::string path, IpAddress server_address, u16 server_port):
 	m_RepositoryDir(
 		Dir::Create(std::move(path))
 	),
 	m_History(m_RepositoryDir->ReadEntireFile(s_HistoryFilename).second),
-	m_DirWatcher(
-		DirWatcher::Create(
-			m_RepositoryDir.get(),
-			std::bind(&Client::OnDirChanged, this, std::placeholders::_1), 
-			{std::regex(s_HistoryFilename)}
-		)
-	),
 	m_ServerAddress(server_address),
 	m_ServerPort(server_port)
 {
-	TryPullRemoteChanges();
-	m_RepositoryDir->WriteEntireFile(s_HistoryFilename, m_History.ToBinary());
+	DirState state = m_RepositoryDir->GetDirState();
+
+
+	auto watcher_callback = [this](FileAction action) {
+		m_Pipe.PushEvent(action);
+	};
+
+	m_DirWatcher = DirWatcher::Create(
+		m_RepositoryDir.get(),
+		watcher_callback,
+		{std::regex(s_HistoryFilename)}
+	);
+
+	m_DirWatcherThread = std::thread([this]() {
+		for (;;) {
+			m_DirWatcher->WaitAndDispatchChanges();
+		}
+	});
 }
 
 void Client::OnDirChanged(FileAction action){
@@ -50,8 +58,10 @@ void Client::OnDirChanged(FileAction action){
 	m_LocalChanges.Add(std::move(action));
 
 	TryFlushLocalChanges();
+}
 
-	m_RepositoryDir->WriteEntireFile(s_HistoryFilename, m_History.ToBinary());
+void Client::OnPullRequired(){
+	TryPullRemoteChanges();
 }
 
 void Client::TryFlushLocalChanges() {
@@ -72,9 +82,11 @@ void Client::TryFlushLocalChanges() {
 		m_History.Add(success.Commits);
 
 		m_LocalChanges.Clear();
-	} else {
-		assert(false);
+	} 
+	if (resp->Type == ResponceType::Diff) {
+		ApplyDiff(resp->AsDiffResponce());
 	}
+	m_RepositoryDir->WriteEntireFile(s_HistoryFilename, m_History.ToBinary());
 
 }
 
@@ -88,41 +100,45 @@ void Client::TryPullRemoteChanges() {
 	if (!resp)
 		return (void)Error("Transition failed, response did not happened");
 
-	if (resp->Type == ResponceType::Diff) {
-		DiffResponce diff = resp->AsDiffResponce();
-		
-		DirState state = m_History.TraceDirState();
-
-		for (const FileData& file : diff.ResultingFiles)
-			m_DirWatcher->AcknowledgedWriteEntireFile(file.RelativeFilepath, file.Content.data(), file.Content.size());
-
-		for (const Commit &commit: diff.Commits){
-			const FileAction &action = commit.Action;
-			if(action.Type == FileActionType::Delete) 
-				//XXX: Handle failure
-				m_DirWatcher->AcknowledgedDeleteFile(commit.Action.RelativeFilepath);
-			if (action.Type == FileActionType::Write) {
-				if (state.Has(action.RelativeFilepath)) {
-					m_DirWatcher->AcknowledgedSetFileTime(action.RelativeFilepath, {m_RepositoryDir->GetFileTime(action.RelativeFilepath)->Created, action.Time});
-				} else {
-					m_DirWatcher->AcknowledgedSetFileTime(action.RelativeFilepath, {action.Time, action.Time});
-				}
-			}
-        }
-
-		m_History.Add(diff.Commits);
-
-		for(const Commit &commit: diff.Commits)
-			m_LocalChanges.OverrideIfConflicted(commit.Action);
-
-	} else {
+	if (resp->Type == ResponceType::Diff) 
+		ApplyDiff(resp->AsDiffResponce());
+	else 
 		assert(false);
-	}
+	m_RepositoryDir->WriteEntireFile(s_HistoryFilename, m_History.ToBinary());
+}
+
+void Client::ApplyDiff(const DiffResponce& diff){
+
+	DirState state = m_History.TraceDirState();
+
+    for (const FileData& file : diff.ResultingFiles)
+        m_DirWatcher->AcknowledgedWriteEntireFile(file.RelativeFilepath, file.Content.data(), file.Content.size());
+
+    for (const Commit &commit: diff.Commits){
+        const FileAction &action = commit.Action;
+        if(action.Type == FileActionType::Delete) 
+            //XXX: Handle failure
+            m_DirWatcher->AcknowledgedDeleteFile(commit.Action.RelativeFilepath);
+        if (action.Type == FileActionType::Write) {
+            if (state.Has(action.RelativeFilepath)) {
+                m_DirWatcher->AcknowledgedSetFileTime(action.RelativeFilepath, {m_RepositoryDir->GetFileTime(action.RelativeFilepath)->Created, action.Time});
+            } else {
+                m_DirWatcher->AcknowledgedSetFileTime(action.RelativeFilepath, {action.Time, action.Time});
+            }
+        }
+    }
+
+    m_History.Add(diff.Commits);
+
+    for(const Commit &commit: diff.Commits)
+        m_LocalChanges.OverrideIfConflicted(commit.Action);	
 }
 
 void Client::Run(){
+	m_Pipe.RegisterEventType<FileAction>(std::bind(&Client::OnDirChanged, this, std::placeholders::_1));
+
 	while(true) {
-		m_DirWatcher->WaitAndDispatchChanges();
+		m_Pipe.WaitAndDispath();	
 	}
 }
 

@@ -7,6 +7,7 @@
 #include <fstream>
 #include <thread>
 #include <chrono>
+#include <mutex>
 
 using namespace std::literals::chrono_literals;
 
@@ -279,6 +280,8 @@ private:
 	IgnoreList m_IgnoreList;
 	DirState m_LastState;
 	bool m_IsEnabled = true;
+
+	std::mutex m_Lock;
 public:
 	Win32DirWatcher(Dir *dir, OnDirChangedCallback callback, IgnoreList ignore_list):
 		m_Dir(dir),
@@ -288,6 +291,8 @@ public:
 	{}
 
 	bool WaitAndDispatchChanges()override{
+		std::unique_lock<std::mutex> guard(m_Lock);
+
 		if(!m_IsEnabled)
 			return false;
 
@@ -315,6 +320,8 @@ public:
 	}
 
 	bool AcknowledgedWriteEntireFile(const std::string& filepath, const void* data, size_t size) {
+		std::unique_lock<std::mutex> guard(m_Lock);
+
 		bool is_created = !m_LastState.Has(filepath);
 
 		if(!m_Dir->WriteEntireFile(filepath, data, size))
@@ -331,11 +338,15 @@ public:
 	}
 
 	bool AcknowledgedDeleteFile(const std::string& filepath) {
+		std::unique_lock<std::mutex> guard(m_Lock);
+
 		m_LastState.Remove(m_LastState.Find(filepath));
 		return m_Dir->DeleteFile(filepath);
 	}
 
 	bool AcknowledgedSetFileTime(const std::string& filepath, FileTime time) {
+		std::unique_lock<std::mutex> guard(m_Lock);
+
 		FileMeta *file = m_LastState.Find(filepath);
 		if(!file)
 			return false;
