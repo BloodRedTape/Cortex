@@ -20,6 +20,7 @@ constexpr u16 BroadcastListenPort = 10007;
 
 struct BroadcastProtocolHeader{
 	u64 MagicWord = BroadcastMagicWord;
+	IpAddress Ip = IpAddress::Any;
 };
 
 enum class RequestType: u32{

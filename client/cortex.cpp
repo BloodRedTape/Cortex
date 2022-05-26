@@ -68,6 +68,11 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 				Println("BroadcastThread: broken broadcast header");
 				continue;
 			}
+
+			if(header.Ip == IpAddress::LocalNetworkAddress()
+			|| header.Ip == IpAddress::Loopback)
+				continue;
+			Println("Broadcast changes from: %", header.Ip);
 			
 			m_Pipe.PushEvent(BroadcastEvent{});
 		}
@@ -85,7 +90,7 @@ void Client::OnDirChanged(FileAction action){
 	if(m_IgnoreList.ShouldBeIgnored(action.RelativeFilepath))
 		return;
 
-	Println("FileChanged: %", action.RelativeFilepath);
+	Println("OnDirChanged: %", action.RelativeFilepath);
 
 	m_LocalChanges.Add(std::move(action));
 
@@ -93,6 +98,8 @@ void Client::OnDirChanged(FileAction action){
 }
 
 void Client::OnBroadcastEvent(BroadcastEvent){
+	Println("OnBroadcast");
+
 	TryPullRemoteChanges();
 	TryFlushLocalChanges();
 }

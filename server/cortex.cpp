@@ -32,6 +32,8 @@ public:
 			u16       remote_port    = connection.RemotePort();
 
 			std::optional<Request> req = Request::Receive(connection);
+
+			Println("Transition from: %:%", remote_address, remote_port);
 			
 			if (!req){
 				Error("Disconnected during receiving");
@@ -45,7 +47,7 @@ public:
 				PushRequest push = req->AsPushRequest();
 				if (push.TopHash == History.HashLastCommit()) {
 					ApplyActions(RepoDir.get(), History, push.Actions, push.ResultingFiles);
-					BroadcastChanges();
+					BroadcastChanges(remote_address);
 					SendSuccess(connection, History.CollectCommitsAfter(push.TopHash));
 				} else {
 					SendDiffHistory(connection, push.TopHash);
@@ -75,8 +77,12 @@ public:
 			Error("Disconnected during sending");
 	}
 
-	void BroadcastChanges() {
-		BroadcastProtocolHeader header;
+	void BroadcastChanges(IpAddress src_address) {
+		BroadcastProtocolHeader header{
+			BroadcastMagicWord,
+			src_address
+		};
+
 		//XXX: Validation
 		Broadcaster.Send(&header, sizeof(header), IpAddress::ThisNetworkBroadcast, BroadcastListenPort);
 	}
