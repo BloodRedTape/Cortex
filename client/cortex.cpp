@@ -71,11 +71,12 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 				continue;
 			}
 
-			if(header.Ip == IpAddress::LocalNetworkAddress()
-			|| header.Ip == IpAddress::Loopback){
+			if(header.Ip == IpAddress::LocalNetworkAddress()){
 				Println("BroadcastThread: self broadcast");
 				continue;
 			}
+			if(header.Ip == IpAddress::Loopback())
+				assert(false);
 			Println("Broadcast changes from: %", header.Ip);
 			
 			m_Pipe.PushEvent(BroadcastEvent{});

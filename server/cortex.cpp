@@ -47,7 +47,8 @@ public:
 				PushRequest push = req->AsPushRequest();
 				if (push.TopHash == History.HashLastCommit()) {
 					ApplyActions(RepoDir.get(), History, push.Actions, push.ResultingFiles);
-					BroadcastChanges(remote_address);
+					//If remote address is loopback, then client is on this machine and loopback may be set as remote address
+					BroadcastChanges(remote_address == IpAddress::Loopback ? IpAddress::LocalNetworkAddress() : remote_address);
 					SendSuccess(connection, History.CollectCommitsAfter(push.TopHash));
 				} else {
 					SendDiffHistory(connection, push.TopHash);
