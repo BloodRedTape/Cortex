@@ -30,6 +30,8 @@ public:
 		return m_Address;
 	}
 
+	static IpAddress LocalNetworkAddress();
+
 	friend std::ostream &operator<<(std::ostream &stream, IpAddress address);
 };
 

@@ -4,15 +4,40 @@
 #include "error.hpp"
 #include <atomic>
 #include <WinSock2.h>
-#define WSA_EXPR(xpr) xpr; Info("Expr{%} => %", #xpr, WSAGetLastError()); (WSAGetLastError() != 0 ? __debugbreak() : (void)0)
 
-static std::atomic<bool> s_IsWSAInited{false};
+#define WSA_EXPR(xpr) xpr; (WSAGetLastError() != 0 ? (__debugbreak(), Info("Expr{%} => %", #xpr, WSAGetLastError())) : (void)0)
 
-SocketHandle Socket::OpenImpl(bool is_udp) {
+void EnsureWSAInited() {
+	static std::atomic<bool> s_IsWSAInited{false};
+
 	if (!s_IsWSAInited.exchange(true)){
 		WSADATA wsaData;
 		WSA_EXPR((void)WSAStartup(MAKEWORD(2,2), &wsaData));
 	}
+}
+
+IpAddress IpAddress::LocalNetworkAddress() {
+	EnsureWSAInited();
+
+    char ac[80];
+    if (gethostname(ac, sizeof(ac)) == SOCKET_ERROR)
+        return IpAddress::Any;
+
+    struct hostent *phe = gethostbyname(ac);
+
+    if (phe == 0)
+        return IpAddress::Any;
+
+    for (int i = 0; phe->h_addr_list[i] != 0; ++i) {
+        struct in_addr addr;
+        memcpy(&addr, phe->h_addr_list[i], sizeof(struct in_addr));
+		return IpAddress(addr.s_addr);
+    }
+	return IpAddress::Any;
+}
+
+SocketHandle Socket::OpenImpl(bool is_udp) {
+	EnsureWSAInited();
 
 	WSA_EXPR(SOCKET sock = socket(AF_INET, is_udp ? SOCK_DGRAM : SOCK_STREAM, 0));
 
