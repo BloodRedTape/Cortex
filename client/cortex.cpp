@@ -34,6 +34,8 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 	m_ServerAddress(server_address),
 	m_ServerPort(server_port)
 {
+	Println("Running on %", IpAddress::LocalNetworkAddress());
+	Println("Server is on %:%", m_ServerAddress, m_ServerPort);
 
 	for(const FileAction &action: m_RepositoryDir->GetDirState().GetDiffFrom(m_History.TraceDirState()))
 		OnDirChanged(action);
@@ -70,8 +72,10 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 			}
 
 			if(header.Ip == IpAddress::LocalNetworkAddress()
-			|| header.Ip == IpAddress::Loopback)
+			|| header.Ip == IpAddress::Loopback){
+				Println("BroadcastThread: self broadcast");
 				continue;
+			}
 			Println("Broadcast changes from: %", header.Ip);
 			
 			m_Pipe.PushEvent(BroadcastEvent{});
@@ -79,6 +83,8 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 	});
 
 	m_Pipe.RegisterEventType<BroadcastEvent>(std::bind(&Client::OnBroadcastEvent, this, std::placeholders::_1));
+	
+	OnBroadcastEvent(BroadcastEvent{});
 }
 
 Client::~Client(){

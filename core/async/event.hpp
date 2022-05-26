@@ -7,6 +7,7 @@
 #include <condition_variable>
 #include <typeindex>
 #include <type_traits>
+#include "print.hpp"
 
 class EventPipe {
 private:
@@ -65,6 +66,7 @@ public:
 			std::unique_ptr<EventType> &type = m_EventTypes.find(index)->second;
 
 			type->Push(&e);
+			Println("[EventPipe]: Pushed %", typeid(T).name());
 		}
 
 		m_CondVar.notify_one();
