@@ -13,7 +13,15 @@ SocketHandle Socket::OpenImpl(bool is_udp) {
 		WSADATA wsaData;
 		WSA_EXPR((void)WSAStartup(MAKEWORD(2,2), &wsaData));
 	}
+
 	WSA_EXPR(SOCKET sock = socket(AF_INET, is_udp ? SOCK_DGRAM : SOCK_STREAM, 0));
+
+	if(is_udp){
+		char broadcastEnable = 1;
+		//XXX: Validation
+		WSA_EXPR(int ret = setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable)));
+	}
+
 	return (SocketHandle)sock;
 }
 
