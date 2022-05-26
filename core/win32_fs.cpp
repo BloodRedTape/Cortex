@@ -278,7 +278,6 @@ private:
 	Dir *m_Dir = nullptr;
 	OnDirChangedCallback m_Callback;
 	DirState m_LastState;
-	bool m_IsEnabled = true;
 
 	std::mutex m_Lock;
 public:
@@ -289,16 +288,13 @@ public:
 	{}
 
 	bool WaitAndDispatchChanges()override{
-		std::unique_lock<std::mutex> guard(m_Lock);
-
-		if(!m_IsEnabled)
-			return false;
 
 		int diff_size = 0;
 		for(;;){
+			m_Lock.lock();
 			DirState current_state = m_Dir->GetDirState();
-
 			DirStateDiff diff = current_state.GetDiffFrom(m_LastState);
+			m_Lock.unlock();
 			diff_size = diff.size();
 
 			if(!diff_size){
@@ -308,8 +304,10 @@ public:
 
 			for (const FileAction& action : diff)
 				m_Callback(action);
-
+			
+			m_Lock.lock();
 			m_LastState = std::move(current_state);
+			m_Lock.unlock();
 		}while(!diff_size);
 
 		return true;
