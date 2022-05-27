@@ -160,7 +160,7 @@ public:
 
 		if(!ReadFile(file, &content[0], size.LowPart, nullptr, nullptr)){
 			CloseHandle(file);
-			return {false, {}};
+			return {Error("ReadEntireFile: %", GetLastError()), {}};
 		}
 		
 		CloseHandle(file);
@@ -217,7 +217,7 @@ public:
 
 		if(!WriteFile(file, data, size, nullptr, nullptr)){
 			CloseHandle(file);
-			return false;
+			return Error("WriteEntireFile: %", GetLastError());
 		}
 		CloseHandle(file);
 		return true;
@@ -226,7 +226,9 @@ public:
 	#undef DeleteFile
 	bool DeleteFile(const std::string &relative_path)override{
 		std::string path = m_DirPath + relative_path;
-		return DeleteFileA(path.c_str()) != 0;
+		if(!DeleteFileA(path.c_str()))
+			return Error("DeleteFile: %", GetLastError());
+		return true;
 	}
 
 	std::optional<FileTime> GetFileTime(const std::string& relative_path)override {
