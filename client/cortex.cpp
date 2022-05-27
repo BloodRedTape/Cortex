@@ -58,6 +58,9 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 			m_IsRunning = false;
 			return Error("Can't bind to port '%' for broadcast listening", BroadcastListenPort);
 		}
+		//Somehow this makes broadcast work
+		char none = '\0';
+		socket.Send(&none, sizeof(none), IpAddress::ThisNetworkBroadcast, 22822);
 
 		while (m_IsRunning) {
 			BroadcastProtocolHeader header;
@@ -75,7 +78,7 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 				Println("BroadcastThread: self broadcast");
 				continue;
 			}
-			if(header.Ip == IpAddress::Loopback())
+			if(header.Ip == IpAddress::Loopback)
 				assert(false);
 			Println("Broadcast changes from: %", header.Ip);
 			
@@ -112,6 +115,9 @@ void Client::OnBroadcastEvent(BroadcastEvent){
 }
 
 void Client::TryFlushLocalChanges() {
+	if(m_LocalChanges.Size())
+		return;
+
 	PushRequest push{
 		m_History.HashLastCommit(),
 		m_LocalChanges.ToVector(),

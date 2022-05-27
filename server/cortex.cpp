@@ -25,6 +25,7 @@ public:
 	{}
 
 	void Run() {
+		Broadcaster.Bind(IpAddress::LocalNetworkAddress(), Socket::AnyPort);
 		Listener.Bind(IpAddress::Any, 25565);
 		while (true) {
 			TcpSocket connection     = Listener.Accept();
@@ -33,12 +34,12 @@ public:
 
 			std::optional<Request> req = Request::Receive(connection);
 
-			Println("Transition from: %:%", remote_address, remote_port);
-			
 			if (!req){
 				Error("Disconnected during receiving");
 				continue;
 			}
+
+			Println("Transition from: %:% -> %", remote_address, remote_port, RequestTypeString(req->Type));
 
 			if (req->Type == RequestType::Pull)
 				SendDiffHistory(connection, req->AsPullRequest().TopHash);

@@ -105,6 +105,10 @@ public:
 		Super::clear();
 	}
 
+	size_t Size()const {
+		return Super::size();
+	}
+
 	void OverrideIfConflicted(const FileAction &action);
 };
 
