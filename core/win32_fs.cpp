@@ -225,7 +225,8 @@ public:
 
 	#undef DeleteFile
 	bool DeleteFile(const std::string &relative_path)override{
-		return DeleteFileA(relative_path.c_str()) != 0;
+		std::string path = m_DirPath + relative_path;
+		return DeleteFileA(path.c_str()) != 0;
 	}
 
 	std::optional<FileTime> GetFileTime(const std::string& relative_path)override {
@@ -240,10 +241,13 @@ public:
 			return {};
 
 		FILETIME created, modified;
-		if(!::GetFileTime(file, &created, nullptr, &modified))
-			return {};
+		auto res = ::GetFileTime(file, &created, nullptr, &modified);
 
 		CloseHandle(file);
+
+		if(!res)
+			return {};
+
 
 		
 		return {
