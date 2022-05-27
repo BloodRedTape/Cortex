@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <optional>
 #include "cortex.hpp"
@@ -28,12 +29,13 @@ std::optional<Responce> Transition(const Request &req, IpAddress address, u16 po
 Client::Client(std::string path, IpAddress server_address, u16 server_port):
 	m_IgnoreList({std::regex(s_HistoryFilename)}),
 	m_RepositoryDir(
-		Dir::Create(std::move(path))
+		Dir::Create(path)
 	),
 	m_History(m_RepositoryDir->ReadEntireFile(s_HistoryFilename).second),
 	m_ServerAddress(server_address),
 	m_ServerPort(server_port)
 {
+	Println("RepositoryPath: %", path);
 	Println("Running on %", IpAddress::LocalNetworkAddress());
 	Println("Server is on %:%", m_ServerAddress, m_ServerPort);
 
@@ -194,5 +196,10 @@ void Client::Run(){
 }
 
 int main(int argc, char **argv) {
-	Client("W:\\Dev\\Cortex\\out\\client\\", IpAddress::Loopback, 25565).Run();
+	std::fstream config("client.config");
+	assert(config.is_open());
+	std::string filepath;
+	std::getline(config, filepath);
+
+	Client(std::move(filepath), IpAddress::Loopback, 25565).Run();
 }
