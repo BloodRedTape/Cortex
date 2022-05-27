@@ -152,7 +152,7 @@ public:
 
 		if(!GetFileSizeEx(file, &size) || std::numeric_limits<DWORD>::max() < size.QuadPart){
 			CloseHandle(file);
-			return {Error("WriteEntireFile(%): GetFileSize: %", relative_path, GetLastError()), {}};
+			return {Error("ReadEntireFile(%): GetFileSize: %", relative_path, GetLastError()), {}};
 		}
 			
 		std::string content;
@@ -161,7 +161,7 @@ public:
 
 		if(!ReadFile(file, &content[0], size.LowPart, nullptr, nullptr)){
 			CloseHandle(file);
-			return {Error("WriteEntireFile(%): ReadFile: %", relative_path, GetLastError()), {}};
+			return {Error("ReadEntireFile(%): ReadFile: %", relative_path, GetLastError()), {}};
 		}
 		
 		CloseHandle(file);
