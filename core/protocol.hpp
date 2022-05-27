@@ -76,14 +76,14 @@ struct Request {
 	{}
 
 	PullRequest AsPullRequest()const{
-		assert(Type == RequestType::Pull);
-		assert(Content.size() == sizeof(Hash));
+		CX_ASSERT(Type == RequestType::Pull);
+		CX_ASSERT(Content.size() == sizeof(Hash));
 
 		return {{(const u8*)Content.data()}};
 	}
 
 	PushRequest AsPushRequest()const {
-		assert(Type == RequestType::Push);
+		CX_ASSERT(Type == RequestType::Push);
 
 		std::stringstream stream(Content);
 
@@ -169,7 +169,7 @@ struct Responce {
 	{}
 
 	DiffResponce AsDiffResponce()const {
-		assert(Type == ResponceType::Diff);
+		CX_ASSERT(Type == ResponceType::Diff);
 		
 		std::stringstream stream(Content);
 
@@ -180,7 +180,7 @@ struct Responce {
 	}
 
 	SuccessResponce AsSuccessResponce()const {
-		assert(Type == ResponceType::Success);
+		CX_ASSERT(Type == ResponceType::Success);
 
 		return {StringSerializer<std::vector<Commit>>::Deserialize(Content)};
 	}

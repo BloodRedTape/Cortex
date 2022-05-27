@@ -77,11 +77,11 @@ void DirState::Apply(const FileAction& action, UnixTime action_time){
 		meta->ModificationTime = action_time;
 	}else if (action.Type == FileActionType::Delete) {
 		Remove(Find(action.RelativeFilepath));
-	}else assert(false);
+	}else CX_ASSERT(false);
 }
 
 void DirState::Remove(FileMeta *state){
-	assert(state >= data() && state < data() + size());
+	CX_ASSERT(state >= data() && state < data() + size());
 	std::swap(back(), *state);
 	pop_back();
 }

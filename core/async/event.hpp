@@ -27,7 +27,7 @@ public:
 	void RegisterEventType(std::function<void(T)> callback){ 
 		std::type_index index(typeid(T));
 
-		assert(m_EventTypes.find(index) == m_EventTypes.end());
+		CX_ASSERT(m_EventTypes.find(index) == m_EventTypes.end());
 
 		struct Event: EventType {
 			std::function<void(T)> Callback;
@@ -61,7 +61,7 @@ public:
 
 			std::type_index index(typeid(T));
 
-			assert(m_EventTypes.find(index) != m_EventTypes.end());
+			CX_ASSERT(m_EventTypes.find(index) != m_EventTypes.end());
 
 			std::unique_ptr<EventType> &type = m_EventTypes.find(index)->second;
 

@@ -1,7 +1,6 @@
 #ifndef CORTEX_FILE_ACTION_HPP
 #define CORTEX_FILE_ACTION_HPP
 
-#include <cassert>
 #include <vector>
 #include "serializer.hpp"
 #include "time.hpp"
@@ -46,7 +45,7 @@ inline const char* FileActionTypeString(FileActionType type) {
 	case FileActionType::Write:  return "Write";
 	case FileActionType::Delete: return "Delete";
 	}
-	assert(false);
+	CX_ASSERT(false);
 	return "Shit happens";
 }
 

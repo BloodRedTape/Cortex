@@ -94,7 +94,7 @@ public:
 
 int main(){
 	std::fstream config("server.config");
-	assert(config.is_open());
+	CX_ASSERT(config.is_open());
 	std::string filepath;
 	std::getline(config, filepath);
 	Server(std::move(filepath)).Run();

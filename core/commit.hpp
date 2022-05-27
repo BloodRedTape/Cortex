@@ -2,7 +2,6 @@
 #define CORTEX_COMMIT_HPP
 
 #include <string>
-#include <cassert>
 #include "time.hpp"
 #include "utils.hpp"
 #include "fs/dir_state.hpp"

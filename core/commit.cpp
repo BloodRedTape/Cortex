@@ -48,7 +48,7 @@ void CommitHistory::Add(const std::vector<FileAction>& actions){
 
 void CommitHistory::Add(const std::vector<Commit>& commits){
     for(const Commit &commit: commits){
-        assert(commit.Previous == HashLastCommit());
+        CX_ASSERT(commit.Previous == HashLastCommit());
         Add(commit);
     }
 }
@@ -71,11 +71,11 @@ DirState CommitHistory::TraceDirState() const{
         }break;
         case FileActionType::Delete: {
             FileMeta *file_state = state.Find(commit.Action.RelativeFilepath);
-            assert(file_state);
+            CX_ASSERT(file_state);
             state.Remove(file_state);
         }break;
         default:
-            assert(false);
+            CX_ASSERT(false);
         }
     }
 

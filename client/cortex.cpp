@@ -81,7 +81,7 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 				continue;
 			}
 			if(header.Ip == IpAddress::Loopback)
-				assert(false);
+				CX_ASSERT(false);
 			Println("Broadcast changes from: %", header.Ip);
 			
 			m_Pipe.PushEvent(BroadcastEvent{});
@@ -158,7 +158,7 @@ void Client::TryPullRemoteChanges() {
 	if (resp->Type == ResponceType::Diff) 
 		ApplyDiff(resp->AsDiffResponce());
 	else 
-		assert(false);
+		CX_ASSERT(false);
 	m_RepositoryDir->WriteEntireFile(s_HistoryFilename, m_History.ToBinary());
 }
 
@@ -197,7 +197,7 @@ void Client::Run(){
 
 int main(int argc, char **argv) {
 	std::fstream config("client.config");
-	assert(config.is_open());
+	CX_ASSERT(config.is_open());
 	std::string filepath;
 	std::string server_address;
 	std::getline(config, filepath);
