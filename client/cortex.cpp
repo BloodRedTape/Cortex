@@ -115,7 +115,7 @@ void Client::OnBroadcastEvent(BroadcastEvent){
 }
 
 void Client::TryFlushLocalChanges() {
-	if(m_LocalChanges.Size())
+	if(!m_LocalChanges.Size())
 		return;
 
 	PushRequest push{
