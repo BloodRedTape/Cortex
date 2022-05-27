@@ -92,6 +92,10 @@ public:
 
 
 int main(){
-	Server("W:\\Dev\\Cortex\\out\\server\\").Run();
+	std::fstream config("server.config");
+	assert(config.is_open());
+	std::string filepath;
+	std::getline(config, filepath);
+	Server(std::move(filepath)).Run();
 	return 0;
 }
