@@ -177,7 +177,7 @@ void Client::ApplyDiff(const DiffResponce& diff){
     for (const FileAction &action: accum){
         if(action.Type == FileActionType::Delete) 
             //XXX: Handle failure
-            m_DirWatcher->AcknowledgedDeleteFile(commit.Action.RelativeFilepath);
+			m_DirWatcher->AcknowledgedDeleteFile(action.RelativeFilepath);
         if (action.Type == FileActionType::Write) {
             if (state.Has(action.RelativeFilepath)) {
                 m_DirWatcher->AcknowledgedSetFileTime(action.RelativeFilepath, {m_RepositoryDir->GetFileTime(action.RelativeFilepath)->Created, action.Time});
