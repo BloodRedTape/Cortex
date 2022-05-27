@@ -28,6 +28,16 @@ enum class RequestType: u32{
 	Push
 };
 
+inline const char *RequestTypeString(RequestType type) {
+	switch (type) {
+	case RequestType::Push:
+		return "Push";
+	case RequestType::Pull:
+		return "Pull";
+	}
+	return "Shit happens";
+}
+
 struct PullRequest {
 	Hash TopHash;
 
