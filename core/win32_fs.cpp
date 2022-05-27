@@ -243,6 +243,8 @@ public:
 		if(!::GetFileTime(file, &created, nullptr, &modified))
 			return {};
 
+		CloseHandle(file);
+
 		
 		return {
 			FileTime{
@@ -265,7 +267,9 @@ public:
 		FILETIME created = UnixSecondsToWindowsFileTime(time.Created.Seconds);
 		FILETIME modified = UnixSecondsToWindowsFileTime(time.Modified.Seconds);
 
-		return ::SetFileTime(file, &created, nullptr, &modified);
+		auto result = ::SetFileTime(file, &created, nullptr, &modified);
+		CloseHandle(file);
+		return result;
 	}
 };
 
