@@ -1,4 +1,5 @@
-﻿#include "protocol.hpp"
+﻿#include <fstream>
+#include "protocol.hpp"
 #include "fs/dir.hpp"
 #include "commit.hpp"
 #include "net/tcp_listener.hpp"

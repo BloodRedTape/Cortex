@@ -1,8 +1,18 @@
 #include "net/ip.hpp"
+#include <cassert>
+#include <cstdio>
 
 const IpAddress IpAddress::ThisNetworkBroadcast(255, 255, 255, 255);
 const IpAddress IpAddress::Loopback(127, 0, 0, 1);
 const IpAddress IpAddress::Any(0, 0, 0, 0);
+
+IpAddress::IpAddress(const char* address){
+	int octets[4];
+	int res = sscanf(address, "%d.%d.%d.%d", octets + 0, octets + 1, octets + 2, octets + 3);
+	assert(res == 4);
+
+	*this = IpAddress(octets[0], octets[1], octets[2], octets[3]);
+}
 
 std::ostream &operator<<(std::ostream& stream, IpAddress address){
 	u32 host = ToHostByteOrder((u32)address);

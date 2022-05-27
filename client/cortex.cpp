@@ -199,7 +199,9 @@ int main(int argc, char **argv) {
 	std::fstream config("client.config");
 	assert(config.is_open());
 	std::string filepath;
+	std::string server_address;
 	std::getline(config, filepath);
+	std::getline(config, server_address);
 
-	Client(std::move(filepath), IpAddress::Loopback, 25565).Run();
+	Client(std::move(filepath), IpAddress(server_address.c_str()), 25565).Run();
 }

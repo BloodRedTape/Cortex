@@ -16,6 +16,8 @@ public:
 private:
 	u32 m_Address = 0;
 public:
+	IpAddress(const char *address);
+
 	IpAddress(u32 network_byte_order_address):
 		m_Address(network_byte_order_address)
 	{}
