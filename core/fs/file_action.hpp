@@ -130,7 +130,14 @@ inline void FileActionAccumulator::Add(FileAction new_action){
 	bool is_added = false;
 	for (auto &action : *this) {
 		if (action.RelativeFilepath == new_action.RelativeFilepath) {
-			action.Type = new_action.Type;
+			if (new_action.Type == FileActionType::Delete) {
+				std::swap(action, Super::back());
+				Super::pop_back();
+			} else if (new_action.Type == FileActionType::Write) {
+				action.Time = new_action.Time;
+			} else {
+				CX_ASSERT(false);
+			}
 			is_added = true;
 			break;
 		}
