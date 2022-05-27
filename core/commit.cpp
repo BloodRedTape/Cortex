@@ -63,7 +63,11 @@ DirState CommitHistory::TraceDirState() const{
     for (const Commit& commit : *this) {
         switch (commit.Action.Type) {
         case FileActionType::Write: {
-            state.emplace_back(commit.Action.RelativeFilepath, commit.Action.Time);
+            FileMeta *file_state = state.Find(commit.Action.RelativeFilepath);
+            if(!file_state)
+                state.emplace_back(commit.Action.RelativeFilepath, commit.Action.Time);
+            else
+                file_state->ModificationTime = commit.Action.Time;
         }break;
         case FileActionType::Delete: {
             FileMeta *file_state = state.Find(commit.Action.RelativeFilepath);
