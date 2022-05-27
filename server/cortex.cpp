@@ -48,6 +48,10 @@ public:
 			if (req->Type == RequestType::Push) {
 				PushRequest push = req->AsPushRequest();
 				if (push.TopHash == History.HashLastCommit()) {
+#if 1
+					for (auto action : push.Actions)
+						Println("Action: %, File: %", FileActionTypeString(action.Type), action.RelativeFilepath);
+#endif
 					ApplyActions(RepoDir.get(), History, push.Actions, push.ResultingFiles);
 					//If remote address is loopback, then client is on this machine and loopback may be set as remote address
 					BroadcastChanges(remote_address == IpAddress::Loopback ? IpAddress::LocalNetworkAddress() : remote_address);

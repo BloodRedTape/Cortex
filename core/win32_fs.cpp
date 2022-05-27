@@ -145,13 +145,14 @@ public:
 	std::pair<bool, std::string> ReadEntireFile(const std::string &relative_path)override{
 		OFSTRUCT fo = {sizeof(fo)};
 		HANDLE file = (HANDLE)OpenFile((m_DirPath + relative_path).c_str(), &fo, 0);
-		if(!file)
-			return {false, {}};
+		if(file == INVALID_HANDLE_VALUE)
+			return {Error("ReadEntireFile(%): OpenFile: %", relative_path, GetLastError()), {}};
+		
 		LARGE_INTEGER size = {};		
 
 		if(!GetFileSizeEx(file, &size) || std::numeric_limits<DWORD>::max() < size.QuadPart){
 			CloseHandle(file);
-			return {false, {}};
+			return {Error("WriteEntireFile(%): GetFileSize: %", relative_path, GetLastError()), {}};
 		}
 			
 		std::string content;
@@ -160,7 +161,7 @@ public:
 
 		if(!ReadFile(file, &content[0], size.LowPart, nullptr, nullptr)){
 			CloseHandle(file);
-			return {Error("ReadEntireFile: %", GetLastError()), {}};
+			return {Error("WriteEntireFile(%): ReadFile: %", relative_path, GetLastError()), {}};
 		}
 		
 		CloseHandle(file);
@@ -212,12 +213,13 @@ public:
 
 		OFSTRUCT fo = {sizeof(fo)};
 		HANDLE file = (HANDLE)OpenFile((m_DirPath + relative_path).c_str(), &fo, OF_CREATE);
-		if(!file)
-			return false;
+		if(file == INVALID_HANDLE_VALUE){
+			return Error("WriteEntireFile(%): OpenFile: %", relative_path, GetLastError());
+		}
 
 		if(!WriteFile(file, data, size, nullptr, nullptr)){
 			CloseHandle(file);
-			return Error("WriteEntireFile: %", GetLastError());
+			return Error("WriteEntireFile(%): WriteFile: %", relative_path, GetLastError());
 		}
 		CloseHandle(file);
 		return true;

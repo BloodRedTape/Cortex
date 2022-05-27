@@ -157,12 +157,13 @@ std::vector<FileData> CollectFilesData(Dir *dir, const FileActionAccumulator& ac
 		
 	for (const auto &action : actions) {
 		//XXX: Validate
-		result.push_back(
-			FileData{
-				action.RelativeFilepath, 
-				dir->ReadEntireFile(action.RelativeFilepath).second
-			}
-		);
+        if(action.Type == FileActionType::Write)
+		    result.push_back(
+			    FileData{
+				    action.RelativeFilepath, 
+				    dir->ReadEntireFile(action.RelativeFilepath).second
+			    }
+		    );
 	}
 
 	return result;
