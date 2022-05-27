@@ -169,8 +169,12 @@ void Client::ApplyDiff(const DiffResponce& diff){
     for (const FileData& file : diff.ResultingFiles)
         m_DirWatcher->AcknowledgedWriteEntireFile(file.RelativeFilepath, file.Content.data(), file.Content.size());
 
-    for (const Commit &commit: diff.Commits){
-        const FileAction &action = commit.Action;
+	FileActionAccumulator accum;
+
+    for (const Commit &commit: diff.Commits)
+		accum.Add(commit.Action);
+
+    for (const FileAction &action: accum){
         if(action.Type == FileActionType::Delete) 
             //XXX: Handle failure
             m_DirWatcher->AcknowledgedDeleteFile(commit.Action.RelativeFilepath);
