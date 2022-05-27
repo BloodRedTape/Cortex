@@ -39,7 +39,7 @@ public:
 
 			void DispatchIfPresent()override {
 				while (!Events.empty()) {
-					Callback(std::move(Events.back()));
+					Callback(std::move(Events.front()));
 					Events.pop();
 				}
 			}

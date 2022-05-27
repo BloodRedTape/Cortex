@@ -103,7 +103,7 @@ void Client::OnDirChanged(FileAction action){
 		return;
 
 	Println("OnDirChanged: %", action.RelativeFilepath);
-
+	
 	m_LocalChanges.Add(std::move(action));
 
 	TryFlushLocalChanges();
@@ -125,7 +125,13 @@ void Client::TryFlushLocalChanges() {
 		m_LocalChanges.ToVector(),
 		CollectFilesData(m_RepositoryDir.get(), m_LocalChanges)
 	};
-	
+#if 1
+	for (FileAction action : m_LocalChanges.ToVector()){
+		Println("Action: %, File: %", FileActionTypeString(action.Type), action.RelativeFilepath);
+		CX_ASSERT(action.RelativeFilepath.size());
+	}
+
+#endif
 	auto resp = Transition(push, m_ServerAddress, m_ServerPort);
 
 	if (!resp)
