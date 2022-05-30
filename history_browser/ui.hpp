@@ -2,9 +2,10 @@
 
 #include "fs/dir_state.hpp"
 #include "commit.hpp"
+#include "imgui.h"
 
 namespace UI {
-void DockWindow();
+void DockWindow(ImGuiID id);
 
 void DirectoryWindow(const char *title, const DirState &state);
 

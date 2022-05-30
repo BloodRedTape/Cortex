@@ -49,6 +49,8 @@ int main(int argc, char **argv){
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    io.WantSaveIniSettings = false;
+    io.IniFilename = nullptr;
 
     ImGui::StyleColorsDark();
 

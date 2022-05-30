@@ -1,9 +1,10 @@
 #include "ui.hpp"
 #include "imgui.h"
+#include "imgui_internal.h"
 
 namespace UI{
 
-void DockWindow(){
+void DockWindow(ImGuiID id){
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -18,9 +19,9 @@ void DockWindow(){
         flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
         flags |= ImGuiWindowFlags_NoMove;
 
-        ImGui::Begin("UI___", nullptr, flags);
+        ImGui::Begin("__DOCK_WINDOW__", nullptr, flags);
         {
-            ImGui::DockSpace(ImGui::GetID("Dockspace"));
+            ImGui::DockSpace(id);
         }
         ImGui::End();
 
