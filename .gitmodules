@@ -1,0 +1,9 @@
+[submodule "history_browser/imgui"]
+	path = history_browser/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "history_browser/glfw"]
+	path = history_browser/glfw
+	url = https://github.com/glfw/glfw
+[submodule "history_browser/glad"]
+	path = history_browser/glad
+	url = https://github.com/StraitX-Dependencies/glad

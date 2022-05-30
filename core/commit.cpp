@@ -58,6 +58,10 @@ void CommitHistory::Clear() {
 }
 
 DirState CommitHistory::TraceDirState() const{
+    return TraceDirStateUntil(HashLastCommit());
+}
+
+DirState CommitHistory::TraceDirStateUntil(Hash hash) const{
     DirState state;
 
     for (const Commit& commit : *this) {
@@ -77,12 +81,15 @@ DirState CommitHistory::TraceDirState() const{
         default:
             CX_ASSERT(false);
         }
+
+        if(hash == Hash(commit))
+            break;
     }
 
     return state;
 }
 
-Hash CommitHistory::HashLastCommit(){
+Hash CommitHistory::HashLastCommit()const{
 	if (!size()) 
 		return Hash();
 

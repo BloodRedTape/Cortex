@@ -104,11 +104,21 @@ public:
 
 	DirState TraceDirState()const;
 
-	Hash HashLastCommit();
+	DirState TraceDirStateUntil(Hash hash)const;
+
+	Hash HashLastCommit()const;
 
 	size_t FindNextCommitIndex(Hash commit_hash)const;
 
 	std::vector<Commit> CollectCommitsAfter(Hash commit_hash);
+
+	size_t Size()const {
+		return std::vector<Commit>::size();
+	}
+
+	const Commit& operator[](size_t index)const {
+		return std::vector<Commit>::operator[](index);
+	}
 
 	std::string ToBinary()const;
 	
