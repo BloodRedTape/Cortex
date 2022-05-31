@@ -67,7 +67,9 @@ bool CommitHistoryWindow(const char* title, CommitHistory& history, size_t &sele
             bool deleted = commit.Action.Type == FileActionType::Delete;
             ImVec4 icon_color = !deleted ? ImVec4(0.4, 0.9, 0.4, 1.0) : ImVec4(0.9, 0.1, 0.1, 1.0);
             const char *icon_text = deleted ? "D" : "W";
-            std::string hash = (std::stringstream() << commit.Previous).str().substr(0, 6);
+            std::stringstream hash_stream;
+            hash_stream << commit.Previous;
+            std::string hash = hash_stream.str().substr(0, 6);
 
 			ImGui::PushID(i);
             ImGui::TableNextRow();
