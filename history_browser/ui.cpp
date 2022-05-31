@@ -54,6 +54,9 @@ void DirectoryWindow(const char *title, const DirState& state){
 bool CommitHistoryWindow(const char* title, CommitHistory& history, size_t &selected){
     bool changed = false;
 	ImGui::Begin(title);
+    ImGui::Text("Commits: %d", history.Size());
+    ImGui::Separator();
+    ImGui::BeginChild("Child");
 	if (ImGui::BeginTable("__HISTORY__", 1, ImGuiTableFlags_Resizable))
     {
         for (int i = 0; i < history.Size(); i++){
@@ -84,6 +87,7 @@ bool CommitHistoryWindow(const char* title, CommitHistory& history, size_t &sele
         }
         ImGui::EndTable();
     }
+    ImGui::EndChild();
 
 	ImGui::End();
     return changed;
