@@ -33,6 +33,10 @@ if(CORTEX_PLATFORM_WINDOWS)
 	target_link_libraries(CortexCore ws2_32)
 endif()
 
+if(CORTEX_PLATFORM_LINUX)
+	target_link_libraries(CortexCore pthread)
+endif()
+
 target_include_directories(CortexCore 
 	PUBLIC "./"
 )
