@@ -1,3 +1,4 @@
+#include <sstream>
 #include "ui.hpp"
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -39,7 +40,7 @@ void DirectoryWindow(const char *title, const DirState& state){
 			ImGui::PushID(i);
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::Text(meta.RelativeFilepath.c_str());
+            ImGui::Text("%s", meta.RelativeFilepath.c_str());
             //XXX: Show Time 
             //ImGui::TableNextColumn();
             //ImGui::Text(history[i].Action.RelativeFilepath.c_str(), &is, ImGuiSelectableFlags_SpanAllColumns);
@@ -54,7 +55,7 @@ void DirectoryWindow(const char *title, const DirState& state){
 bool CommitHistoryWindow(const char* title, CommitHistory& history, size_t &selected){
     bool changed = false;
 	ImGui::Begin(title);
-    ImGui::Text("Commits: %d", history.Size());
+    ImGui::Text("Commits: %d", (int)history.Size());
     ImGui::Separator();
     ImGui::BeginChild("Child");
 	if (ImGui::BeginTable("__HISTORY__", 1, ImGuiTableFlags_Resizable))
@@ -77,7 +78,7 @@ bool CommitHistoryWindow(const char* title, CommitHistory& history, size_t &sele
             ImGui::Button(icon_text);
             ImGui::PopStyleColor(3);
             ImGui::SameLine();
-            ImGui::Text(hash.c_str());
+            ImGui::Text("%s", hash.c_str());
             ImGui::SameLine();
             if(ImGui::Selectable(history[i].Action.RelativeFilepath.c_str(), &is, ImGuiSelectableFlags_SpanAllColumns)){
                 selected = i;
