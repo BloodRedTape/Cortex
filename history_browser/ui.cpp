@@ -54,19 +54,28 @@ void DirectoryWindow(const char *title, const DirState& state){
 bool CommitHistoryWindow(const char* title, CommitHistory& history, size_t &selected){
     bool changed = false;
 	ImGui::Begin(title);
-	if (ImGui::BeginTable("__HISTORY__", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders))
+	if (ImGui::BeginTable("__HISTORY__", 1, ImGuiTableFlags_Resizable))
     {
         for (int i = 0; i < history.Size(); i++){
 			const Commit &commit = history[i];
 
-			ImGui::PushID(i);
 			bool is = selected == i;
+            bool deleted = commit.Action.Type == FileActionType::Delete;
+            ImVec4 icon_color = !deleted ? ImVec4(0.4, 0.9, 0.4, 1.0) : ImVec4(0.9, 0.1, 0.1, 1.0);
+            const char *icon_text = deleted ? "D" : "W";
+            std::string hash = (std::stringstream() << commit.Previous).str().substr(0, 6);
+
+			ImGui::PushID(i);
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::Text(commit.Action.Type == FileActionType::Delete ? "D" : "W");
-            ImGui::TableNextColumn();
-            ImGui::Text((std::stringstream() << commit.Previous).str().substr(0, 6).c_str());
-            ImGui::TableNextColumn();
+            ImGui::PushStyleColor(ImGuiCol_Button, icon_color);
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, icon_color);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, icon_color);
+            ImGui::Button(icon_text);
+            ImGui::PopStyleColor(3);
+            ImGui::SameLine();
+            ImGui::Text(hash.c_str());
+            ImGui::SameLine();
             if(ImGui::Selectable(history[i].Action.RelativeFilepath.c_str(), &is, ImGuiSelectableFlags_SpanAllColumns)){
                 selected = i;
                 changed = true;
