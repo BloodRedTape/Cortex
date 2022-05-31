@@ -1,17 +1,23 @@
 include(Platform)
 
-add_library(CortexCore STATIC
+set(CORTEX_CORE_SOURCES
 	"./commit.cpp"
-	
-	"./win32_fs.cpp"
-	"./win32_time.cpp"
-	"./win32_net.cpp"
 	"./fs/dir_state.cpp"
 	"./net/ip.cpp"
 	"./net/udp_socket.cpp"
 	"./net/tcp_socket.cpp"
 	"./net/tcp_listener.cpp"
 )
+
+if(CORTEX_PLATFORM_WINDOWS)
+    list(APPEND CORTEX_CORE_SOURCES
+    	"./win32_fs.cpp"
+	    "./win32_time.cpp"
+	    "./win32_net.cpp"
+    )
+endif()
+
+add_library(CortexCore STATIC ${CORTEX_CORE_SOURCES})
 
 target_compile_features(CortexCore PUBLIC cxx_std_17)
 

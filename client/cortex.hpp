@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <thread>
 #include "utils.hpp"
 #include "net/ip.hpp"
 #include "commit.hpp"

@@ -22,7 +22,7 @@ elseif(UNIX)
     # we dont have a linux cmake variable so this is the only option available
     if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         set(CORTEX_PLATFORM_LINUX 1)
-        message(FATAL_ERROR "Linux is not supported yet")
+        message("Linux")
     elseif(ANDROID)
         set(CORTEX_PLATFORM_ANDROID 1)
         message(FATAL_ERROR "Android is not supported yet.")

@@ -3,6 +3,10 @@
 
 #include <iostream>
 
+inline void Print(const char *fmt){
+	std::cout << fmt;	
+}
+
 template <typename T, typename ...ArgsType>
 inline void Print(const char *fmt, const T &arg, const ArgsType&...args) {
 	while (*fmt) {
@@ -13,10 +17,6 @@ inline void Print(const char *fmt, const T &arg, const ArgsType&...args) {
 		}
 		std::cout << ch;
 	}
-}
-
-inline void Print(const char *fmt){
-	std::cout << fmt;	
 }
 
 template <typename ...ArgsType>

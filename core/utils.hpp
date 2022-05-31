@@ -21,4 +21,12 @@ struct NonCopyable {
 	NonCopyable &operator=(const NonCopyable &) = delete;
 };
 
+#if CORTEX_PLATFORM_LINUX
+#define debugbreak() __builtin_trap()
+#elif CORTEX_PLATFORM_WINDOWS
+#define debugbreak() __debugbreak()
+#else
+#define debugbreak() ((void)0)
+#endif
+
 #endif//CORTEX_UTILS_HPP

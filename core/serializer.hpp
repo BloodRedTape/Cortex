@@ -29,7 +29,8 @@ struct StringSerializer {
 	}
 
 	static T Deserialize(const std::string& string) {
-		return Serializer<T>::Deserialize(std::stringstream(string));
+        std::stringstream stream(string);
+		return Serializer<T>::Deserialize(stream);
 	}
 };
 
