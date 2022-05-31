@@ -17,6 +17,14 @@ if(CORTEX_PLATFORM_WINDOWS)
     )
 endif()
 
+if(CORTEX_PLATFORM_LINUX)
+    list(APPEND CORTEX_CORE_SOURCES
+    	"./linux_fs.cpp"
+	    "./linux_time.cpp"
+	    "./linux_net.cpp"
+    )
+endif()
+
 add_library(CortexCore STATIC ${CORTEX_CORE_SOURCES})
 
 target_compile_features(CortexCore PUBLIC cxx_std_17)
