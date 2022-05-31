@@ -205,7 +205,7 @@ void Client::Run(){
 	}
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) {	
 	std::fstream config("client.config");
 	CX_ASSERT(config.is_open());
 	std::string filepath;
