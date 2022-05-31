@@ -1,3 +1,5 @@
+include(Platform)
+
 add_library(CortexCore STATIC
 	"./commit.cpp"
 	
@@ -13,7 +15,9 @@ add_library(CortexCore STATIC
 
 target_compile_features(CortexCore PUBLIC cxx_std_17)
 
-target_link_libraries(CortexCore ws2_32)
+if(CORTEX_PLATFORM_WINDOWS)
+	target_link_libraries(CortexCore ws2_32)
+endif()
 
 target_include_directories(CortexCore 
 	PUBLIC "./"

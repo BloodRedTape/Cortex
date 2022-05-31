@@ -1,9 +1,15 @@
+include(Platform)
 
 add_subdirectory(glfw)
 add_subdirectory(glad)
 
-add_executable(CortexHistoryBrowser
+if(NOT CORTEX_PLATFORM_WINDOWS)
+	message(FATAL_ERROR "History browser is not supported on this platform")
+endif()
+
+add_executable(CortexHistoryBrowser WIN32
 	"main.cpp"
+	"ui.cpp"
 	"history_browser.cpp"
 	"./imgui/imgui.cpp"
 	"./imgui/imgui_widgets.cpp"
@@ -12,7 +18,7 @@ add_executable(CortexHistoryBrowser
 	"./imgui/imgui_demo.cpp"
 	"./imgui/backends/imgui_impl_glfw.cpp"
 	"./imgui/backends/imgui_impl_opengl3.cpp"
- "ui.hpp" "ui.cpp")
+)
 
 target_link_libraries(CortexHistoryBrowser
 	CortexCore

@@ -9,7 +9,22 @@
 #include "history_browser.hpp"
 
 
+#if CORTEX_PLATFORM_WINDOWS
+
+#include <windows.h>
+
+int __cdecl WinMain(
+   HINSTANCE hInstance,
+   HINSTANCE hPrevInstance,
+   LPSTR     lpCmdLine,
+   int       nShowCmd
+){
+    int argc = __argc;
+    char **argv = __argv;
+#else
 int main(int argc, char **argv){
+#endif
+
     for (int i = 0; i < argc; ++i)
         Println("Arg[%]: %", i, argv[i]);
 
