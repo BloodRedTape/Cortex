@@ -43,16 +43,57 @@ FILETIME UnixSecondsToWindowsFileTime(u64 unix_seconds) {
 	return result;
 }
 
+std::string WstrToUtf8Str(const std::wstring& wstr){
+
+	if (wstr.empty())
+		return {};
+
+	int sizeRequired = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.size(), nullptr, 0, nullptr, nullptr);
+
+    if (sizeRequired <= 0)
+		return {};
+
+	std::string retStr(sizeRequired, '\0');
+
+	int bytesConverted = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.size(), retStr.data(), retStr.size(), nullptr, nullptr);
+
+	if(bytesConverted <= 0)
+		Error("Can't convert string to UTF-8");
+
+	return retStr;
+}
+
+std::wstring Utf8ToWstr(const std::string& str){
+
+	if (str.empty())
+		return {};
+
+	int sizeRequired = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.size(), nullptr, 0);
+
+    if (sizeRequired <= 0)
+		return {};
+
+
+	std::wstring retStr(sizeRequired, L'\0');
+
+	int bytesConverted = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.size(), retStr.data(), retStr.size());
+
+	if(bytesConverted <= 0)
+		Error("Can't convert string to UTF-16");
+
+	return retStr;
+}
+
 struct DirIt {
 	HANDLE CurrentFile = INVALID_HANDLE_VALUE;
-	WIN32_FIND_DATAA CurrentFileMetadata = {};
+	WIN32_FIND_DATAW CurrentFileMetadata = {};
 
-	DirIt(const std::string &dir_path) {
-		std::string path = dir_path;
-		if(path.back() != '\\')
-			path.push_back('\\');
-		path.push_back('*');
-		CurrentFile = FindFirstFileA(path.c_str(), &CurrentFileMetadata);
+	DirIt(const std::wstring &dir_path) {
+		std::wstring path = dir_path;
+		if(path.back() != L'\\')
+			path.push_back(L'\\');
+		path.push_back(L'*');
+		CurrentFile = FindFirstFileW(path.c_str(), &CurrentFileMetadata);
 	}
 
 	~DirIt() {
@@ -61,7 +102,7 @@ struct DirIt {
 	}
 
 	DirIt& operator++() {
-		if(!FindNextFileA(CurrentFile, &CurrentFileMetadata)){
+		if(!FindNextFileW(CurrentFile, &CurrentFileMetadata)){
 			FindClose(CurrentFile);
 			CurrentFile = INVALID_HANDLE_VALUE;
 		}
@@ -72,7 +113,7 @@ struct DirIt {
 		return {WindowsFileTimeToUnixSeconds(CurrentFileMetadata.ftLastWriteTime)};
 	}
 
-	const char* Name()const {
+	std::wstring Name()const {
 		return CurrentFileMetadata.cFileName;
 	}
 
@@ -116,24 +157,25 @@ struct DirIt {
 
 class Win32Dir: public Dir{
 private:
-	std::string m_DirPath;
+	std::wstring m_DirPath;
 public:
 	Win32Dir(std::string path):
-		m_DirPath(std::move(path))
+		m_DirPath(Utf8ToWstr(path))
 	{}
 
 	DirState GetDirState()override {
 		return GetDirStateImpl(m_DirPath);
 	}
 
-	DirState GetDirStateImpl(const std::string &dir_path, std::string local_dir_path = "") {
+	DirState GetDirStateImpl(const std::wstring &dir_path, std::wstring local_dir_path = L"") {
 		DirState state;
 
 		for (DirIt it(dir_path); it; ++it) {
+			std::wstring name = it.Name();
 			if(it.IsFile())
-				state.emplace_back(local_dir_path + it.Name(), it.ModifiedTime());
+				state.emplace_back(WstrToUtf8Str(local_dir_path + name), it.ModifiedTime());
 			if (it.IsRegularDir()) {
-				auto sub_state = GetDirStateImpl(dir_path + it.Name() + "\\", local_dir_path + it.Name() + "\\");
+				auto sub_state = GetDirStateImpl(dir_path + name + L"\\", local_dir_path + name + L"\\");
 				state.reserve(state.size() + sub_state.size());
 				std::move(std::begin(sub_state), std::end(sub_state), std::back_inserter(state));
 			}
@@ -143,8 +185,9 @@ public:
 	}
 
 	std::pair<bool, std::string> ReadEntireFile(const std::string &relative_path)override{
-		OFSTRUCT fo = {sizeof(fo)};
-		HANDLE file = (HANDLE)OpenFile((m_DirPath + relative_path).c_str(), &fo, 0);
+		std::wstring path = m_DirPath + Utf8ToWstr(relative_path);
+
+		HANDLE file = (HANDLE)CreateFileW(path.c_str(), GENERIC_READ, 0, nullptr, OPEN_EXISTING, 0, 0);
 		if(file == INVALID_HANDLE_VALUE)
 			return {Error("ReadEntireFile(%): OpenFile: %", relative_path, GetLastError()), {}};
 		
@@ -168,9 +211,9 @@ public:
 		return {true, content};
 	}
 
-	static bool DirExists(const std::string& dir_path)
+	static bool DirExists(const std::wstring& dir_path)
 	{
-		DWORD ftyp = GetFileAttributesA(dir_path.c_str());
+		DWORD ftyp = GetFileAttributesW(dir_path.c_str());
 		if (ftyp == INVALID_FILE_ATTRIBUTES)
 			return false;
 
@@ -180,9 +223,9 @@ public:
 		return false;
 	}
 
-	static bool FileExists(const std::string &file_path)
+	static bool FileExists(const std::wstring &file_path)
 	{ 
-		DWORD dwAttrib = GetFileAttributesA(file_path.c_str());
+		DWORD dwAttrib = GetFileAttributesW(file_path.c_str());
 
 		return  (dwAttrib != INVALID_FILE_ATTRIBUTES
 			&& !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
@@ -195,10 +238,10 @@ public:
 			if (relative_path[i] == '\\') {
 				relative_path[i] = 0;
 
-				std::string full_subpath = m_DirPath + &relative_path[dir_name_begin];
+				std::wstring full_subpath = m_DirPath + Utf8ToWstr(&relative_path[dir_name_begin]);
 				
 				if(!DirExists(full_subpath))
-					if(!CreateDirectoryA(full_subpath.c_str(), nullptr))
+					if(!CreateDirectoryW(full_subpath.c_str(), nullptr))
 						return false;
 
 				dir_name_begin = i + 1;
@@ -211,8 +254,9 @@ public:
 		if(!CreateDirectories(relative_path))
 			return false;
 
-		OFSTRUCT fo = {sizeof(fo)};
-		HANDLE file = (HANDLE)OpenFile((m_DirPath + relative_path).c_str(), &fo, OF_CREATE);
+		std::wstring path = m_DirPath + Utf8ToWstr(relative_path);
+
+		HANDLE file = (HANDLE)CreateFileW(path.c_str(), GENERIC_WRITE | GENERIC_READ, 0, nullptr, CREATE_ALWAYS, 0, 0);
 		if(file == INVALID_HANDLE_VALUE){
 			return Error("WriteEntireFile(%): OpenFile: %", relative_path, GetLastError());
 		}
@@ -227,19 +271,19 @@ public:
 
 	#undef DeleteFile
 	bool DeleteFile(const std::string &relative_path)override{
-		std::string path = m_DirPath + relative_path;
-		if(!DeleteFileA(path.c_str()))
+		std::wstring path = m_DirPath + Utf8ToWstr(relative_path);
+		if(!DeleteFileW(path.c_str()))
 			return Error("DeleteFile: %", GetLastError());
 		return true;
 	}
 
 	std::optional<FileTime> GetFileTime(const std::string& relative_path)override {
-		std::string path = m_DirPath + relative_path;
+		std::wstring path = m_DirPath + Utf8ToWstr(relative_path);
 
-		if(!FileExists(path.c_str()))
+		if(!FileExists(path))
 			return {};
 
-		HANDLE file = CreateFileA(path.c_str(), FILE_WRITE_ATTRIBUTES, 0, nullptr, OPEN_EXISTING, 0, 0);
+		HANDLE file = CreateFileW(path.c_str(), FILE_WRITE_ATTRIBUTES, 0, nullptr, OPEN_EXISTING, 0, 0);
 
 		if(file == INVALID_HANDLE_VALUE)
 			return {};
@@ -263,11 +307,11 @@ public:
 	}
 
 	bool SetFileTime(const std::string& relative_path, FileTime time)override {
-		std::string path = m_DirPath + relative_path;
-		if(!FileExists(path.c_str()))
+		std::wstring path = m_DirPath + Utf8ToWstr(relative_path);
+		if(!FileExists(path))
 			return false;
 
-		HANDLE file = CreateFileA(path.c_str(), FILE_WRITE_ATTRIBUTES, 0, nullptr, OPEN_EXISTING, 0, 0);
+		HANDLE file = CreateFileW(path.c_str(), FILE_WRITE_ATTRIBUTES, 0, nullptr, OPEN_EXISTING, 0, 0);
 
 		if(file == INVALID_HANDLE_VALUE)
 			return {};

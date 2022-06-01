@@ -205,7 +205,15 @@ void Client::Run(){
 	}
 }
 
+#if CORTEX_PLATFORM_WINDOWS
+	#include <windows.h>
+#endif
+
 int main(int argc, char **argv) {	
+#if CORTEX_PLATFORM_WINDOWS
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
 	std::fstream config("client.config");
 	CX_ASSERT(config.is_open());
 	std::string filepath;
