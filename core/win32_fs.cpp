@@ -60,13 +60,18 @@ std::string WstrToUtf8Str(const std::wstring& wstr){
 	if(bytesConverted <= 0)
 		Error("Can't convert string to UTF-8");
 
+	for (char& ch : retStr)
+		if(ch == '\\')
+			ch = '/';
+
 	return retStr;
 }
 
-std::wstring Utf8ToWstr(const std::string& str){
+std::wstring Utf8ToWstr(const std::string &str){
 
 	if (str.empty())
 		return {};
+
 
 	int sizeRequired = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.size(), nullptr, 0);
 
@@ -80,6 +85,10 @@ std::wstring Utf8ToWstr(const std::string& str){
 
 	if(bytesConverted <= 0)
 		Error("Can't convert string to UTF-16");
+
+	for (wchar_t& ch : retStr)
+		if(ch == L'/')
+			ch = L'\\';
 
 	return retStr;
 }
@@ -235,7 +244,7 @@ public:
 		size_t dir_name_begin = 0;
 		
 		for (size_t i = dir_name_begin; i < relative_path.size(); i++) {
-			if (relative_path[i] == '\\') {
+			if (relative_path[i] == '/') {
 				relative_path[i] = 0;
 
 				std::wstring full_subpath = m_DirPath + Utf8ToWstr(&relative_path[dir_name_begin]);
@@ -252,7 +261,7 @@ public:
 
 	bool WriteEntireFile(const std::string &relative_path, const void* data, size_t size)override{
 		if(!CreateDirectories(relative_path))
-			return false;
+			return Error("WriteEntireFile(%): Can't create subdirectories tree", relative_path);
 
 		std::wstring path = m_DirPath + Utf8ToWstr(relative_path);
 
