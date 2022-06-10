@@ -58,7 +58,7 @@ Client::Client(std::string path, IpAddress server_address, u16 server_port):
 		UdpSocket socket;
 		if (!socket.Bind(IpAddress::Any, BroadcastListenPort)) {
 			m_IsRunning = false;
-			return Error("Can't bind to port '%' for broadcast listening", BroadcastListenPort);
+			return (void)Error("Can't bind to port '%' for broadcast listening", BroadcastListenPort);
 		}
 		//Somehow this makes broadcast work
 		char none = '\0';

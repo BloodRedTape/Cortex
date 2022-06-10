@@ -6,12 +6,15 @@
 #include <functional>
 #include <condition_variable>
 #include <typeindex>
+#include <unordered_map>
 #include <type_traits>
 #include "print.hpp"
 
 class EventPipe {
 private:
 	struct EventType {
+		virtual ~EventType() = default;
+		
 		virtual void DispatchIfPresent() = 0;
 
 		virtual void Push(void *e) = 0;
