@@ -3,6 +3,13 @@
 
 #include "utils.hpp"
 
+constexpr bool IsLittleEndian() {
+    constexpr u16 U16 = 0x0102;
+    constexpr u8 U8 = (const u8 &)U16;
+    return U8 == 0x02;
+}
+
+static_assert(IsLittleEndian(), "CortexCore assumes little endian machine");
 
 inline u8 SwapEndianess(u8 value) {
     return value;
