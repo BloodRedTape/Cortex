@@ -1,7 +1,5 @@
 include(Platform)
 
-add_subdirectory(glfw)
-add_subdirectory(glad)
 
 
 if(NOT CORTEX_PLATFORM_WINDOWS AND NOT CORTEX_PLATFORM_LINUX)
@@ -11,20 +9,24 @@ else()
     set(CORTEX_HISTORY_BROWSER_SUPPORTED ON)
 endif()
 
-set(CORTEX_HISTORY_BROWSER_SOURCES
-	"main.cpp"
-	"ui.cpp"
-	"history_browser.cpp"
-	"./imgui/imgui.cpp"
-	"./imgui/imgui_widgets.cpp"
-	"./imgui/imgui_tables.cpp"
-	"./imgui/imgui_draw.cpp"
-	"./imgui/imgui_demo.cpp"
-	"./imgui/backends/imgui_impl_glfw.cpp"
-	"./imgui/backends/imgui_impl_opengl3.cpp"
-)
-
 if(CORTEX_HISTORY_BROWSER_SUPPORTED)
+
+    add_subdirectory(glfw)
+    add_subdirectory(glad)
+
+    set(CORTEX_HISTORY_BROWSER_SOURCES
+	    "main.cpp"
+    	"ui.cpp"
+	    "history_browser.cpp"
+	    "./imgui/imgui.cpp"
+	    "./imgui/imgui_widgets.cpp"
+	    "./imgui/imgui_tables.cpp"
+	    "./imgui/imgui_draw.cpp"
+	    "./imgui/imgui_demo.cpp"
+    	"./imgui/backends/imgui_impl_glfw.cpp"
+    	"./imgui/backends/imgui_impl_opengl3.cpp"
+    )
+
 
     if(CORTEX_PLATFORM_WINDOWS)
         add_executable(CortexHistoryBrowser WIN32 ${CORTEX_HISTORY_BROWSER_SOURCES})

@@ -12,3 +12,16 @@ out
 
 compile_commands.json
 CMakeSettings.json
+
+client_android/*.iml
+client_android/.gradle
+client_android/.idea
+client_android/.cxx
+client_android/.DS_Store
+client_android/.externalNativeBuild
+client_android/local.properties
+client_android/build
+client_android/captures
+client_android/local.properties
+client_android/app/build
+client_android/app/.cxx
