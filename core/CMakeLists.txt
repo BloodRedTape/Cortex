@@ -17,11 +17,11 @@ if(CORTEX_PLATFORM_WINDOWS)
     )
 endif()
 
-if(CORTEX_PLATFORM_LINUX)
+if(CORTEX_PLATFORM_LINUX OR CORTEX_PLATFORM_ANDROID)
     list(APPEND CORTEX_CORE_SOURCES
-    	"./linux_fs.cpp"
-	    "./linux_time.cpp"
-	    "./linux_net.cpp"
+    	"./unix_fs.cpp"
+	    "./unix_time.cpp"
+	    "./unix_net.cpp"
     )
 endif()
 
